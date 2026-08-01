@@ -1,0 +1,168 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  STUDENT
+  ADMIN
+}
+
+enum EstablishmentType {
+  COLLEGE_LYCEE
+  UNIVERSITE
+  GRANDE_ECOLE
+  CENTRE_FORMATION
+}
+
+enum PublicOrPrivate {
+  PUBLIC
+  PRIVE
+}
+
+model User {
+  id                String   @id @default(cuid())
+  nom               String
+  prenom            String
+  email             String   @unique
+  whatsapp          String?
+  dateNaissance     DateTime?
+  niveau            String?
+  classeOuNiveauUniv String?
+  serie             String?
+  ville             String?
+  passwordHash      String
+  role              UserRole @default(STUDENT)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  favorites         Favorite[]
+  brochureRequests  BrochureRequest[]
+
+  @@map("users")
+}
+
+model Establishment {
+  id               String            @id @default(cuid())
+  name             String
+  type             EstablishmentType
+  description      String?
+  logoUrl          String?
+  photos           String[]          @default([])
+  address          String?
+  city             String?
+  country          String?
+  publicOrPrivate  PublicOrPrivate?
+  filieres         String[]          @default([])
+  niveauAdmission  String?
+  admissionInfo    String?
+  budgetRange      String?
+  isPartner        Boolean           @default(false)
+  contactEmail     String?
+  contactPhone     String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  favorites        Favorite[]
+  brochureRequests BrochureRequest[]
+
+  @@map("establishments")
+}
+
+model Advisor {
+  id           String   @id @default(cuid())
+  name         String
+  specialty    String?
+  city         String?
+  bio          String?
+  photoUrl     String?
+  whatsapp     String?
+  calendlyUrl  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("advisors")
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  priceLabel  String?
+  imageUrl    String?
+  chariowUrl  String
+  category    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("products")
+}
+
+model Article {
+  id             String    @id @default(cuid())
+  title          String
+  slug           String    @unique
+  excerpt        String?
+  content        String
+  coverImageUrl  String?
+  category       String?
+  authorName     String?
+  publishedAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@map("articles")
+}
+
+model LeadMagnet {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  fileUrl     String
+  createdAt   DateTime @default(now())
+
+  leads       Lead[]
+
+  @@map("lead_magnets")
+}
+
+model Lead {
+  id           String     @id @default(cuid())
+  name         String
+  email        String
+  whatsapp     String?
+  leadMagnetId String
+  leadMagnet   LeadMagnet @relation(fields: [leadMagnetId], references: [id])
+  createdAt    DateTime   @default(now())
+
+  @@map("leads")
+}
+
+model Favorite {
+  userId          String
+  establishmentId String
+  createdAt       DateTime @default(now())
+
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  establishment Establishment @relation(fields: [establishmentId], references: [id], onDelete: Cascade)
+
+  @@id([userId, establishmentId])
+  @@map("favorites")
+}
+
+model BrochureRequest {
+  id              String        @id @default(cuid())
+  userId          String?
+  user            User?         @relation(fields: [userId], references: [id])
+  establishmentId String
+  establishment   Establishment @relation(fields: [establishmentId], references: [id], onDelete: Cascade)
+  name            String
+  email           String
+  whatsapp        String?
+  createdAt       DateTime      @default(now())
+
+  @@map("brochure_requests")
+}
