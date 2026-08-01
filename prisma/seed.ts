@@ -143,17 +143,36 @@ const advisors = [
   },
 ];
 
+const leadMagnets = [
+  {
+    title: "Guide gratuit : réussir son orientation post-Bac",
+    description:
+      "Un guide complet pour comprendre les filières et faire les bons choix après le Bac.",
+    fileUrl: "https://example.com/guides/orientation-post-bac.pdf",
+  },
+  {
+    title: "Checklist de révisions Bac 2026",
+    description:
+      "La checklist pour organiser ses révisions semaine par semaine avant les examens.",
+    fileUrl: "https://example.com/guides/checklist-bac-2026.pdf",
+  },
+];
+
 async function main() {
+  await prisma.download.deleteMany();
   await prisma.brochureRequest.deleteMany();
   await prisma.favorite.deleteMany();
+  await prisma.lead.deleteMany();
   await prisma.establishment.deleteMany();
   await prisma.advisor.deleteMany();
+  await prisma.leadMagnet.deleteMany();
 
   await prisma.establishment.createMany({ data: establishments });
   await prisma.advisor.createMany({ data: advisors });
+  await prisma.leadMagnet.createMany({ data: leadMagnets });
 
   console.log(
-    `Seed terminé : ${establishments.length} établissements, ${advisors.length} conseillers.`,
+    `Seed terminé : ${establishments.length} établissements, ${advisors.length} conseillers, ${leadMagnets.length} guides gratuits.`,
   );
 }
 

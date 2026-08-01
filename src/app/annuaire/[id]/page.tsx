@@ -4,7 +4,9 @@ import { notFound } from "next/navigation";
 import { GraduationCap, Mail, MapPin, Phone } from "lucide-react";
 
 import { BrochureRequestForm } from "@/components/annuaire/brochure-request-form";
+import { FavoriteButton } from "@/components/annuaire/favorite-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import {
   ESTABLISHMENT_TYPE_LABELS,
@@ -36,6 +38,20 @@ export default async function EstablishmentPage({
   if (!establishment) {
     notFound();
   }
+
+  const session = await auth();
+  const isFavorited = session?.user
+    ? Boolean(
+        await prisma.favorite.findUnique({
+          where: {
+            userId_establishmentId: {
+              userId: session.user.id,
+              establishmentId: establishment.id,
+            },
+          },
+        }),
+      )
+    : false;
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
@@ -70,6 +86,13 @@ export default async function EstablishmentPage({
                   : ""}
                 {establishment.city ? ` · ${establishment.city}` : ""}
               </p>
+              <div className="mt-3">
+                <FavoriteButton
+                  establishmentId={establishment.id}
+                  isFavorited={isFavorited}
+                  isLoggedIn={Boolean(session?.user)}
+                />
+              </div>
             </div>
           </div>
 

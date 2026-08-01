@@ -3,14 +3,20 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Menu, X } from "lucide-react";
+import { LayoutDashboard, Menu, ShieldCheck, X } from "lucide-react";
 
 import { Logo } from "@/components/layout/logo";
 import { Button } from "@/components/ui/button";
+import { logoutUser } from "@/lib/actions/auth";
 import { mainNav } from "@/lib/nav";
 import { cn } from "@/lib/utils";
 
-export function SiteHeader() {
+type HeaderUser = {
+  name?: string | null;
+  role: "STUDENT" | "ADMIN";
+} | null;
+
+export function SiteHeader({ user }: { user: HeaderUser }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -41,12 +47,38 @@ export function SiteHeader() {
         </nav>
 
         <div className="hidden items-center gap-2 lg:flex">
-          <Button asChild variant="outline" size="sm">
-            <Link href="/connexion">Connexion</Link>
-          </Button>
-          <Button asChild size="sm">
-            <Link href="/inscription">Inscription</Link>
-          </Button>
+          {user ? (
+            <>
+              {user.role === "ADMIN" && (
+                <Button asChild variant="outline" size="sm">
+                  <Link href="/admin">
+                    <ShieldCheck className="size-4" />
+                    Admin
+                  </Link>
+                </Button>
+              )}
+              <Button asChild variant="outline" size="sm">
+                <Link href="/dashboard">
+                  <LayoutDashboard className="size-4" />
+                  Mon espace
+                </Link>
+              </Button>
+              <form action={logoutUser}>
+                <Button type="submit" size="sm">
+                  Déconnexion
+                </Button>
+              </form>
+            </>
+          ) : (
+            <>
+              <Button asChild variant="outline" size="sm">
+                <Link href="/connexion">Connexion</Link>
+              </Button>
+              <Button asChild size="sm">
+                <Link href="/inscription">Inscription</Link>
+              </Button>
+            </>
+          )}
         </div>
 
         <button
@@ -76,12 +108,32 @@ export function SiteHeader() {
             ))}
           </ul>
           <div className="mt-4 flex flex-col gap-2">
-            <Button asChild variant="outline" onClick={() => setOpen(false)}>
-              <Link href="/connexion">Connexion</Link>
-            </Button>
-            <Button asChild onClick={() => setOpen(false)}>
-              <Link href="/inscription">Inscription</Link>
-            </Button>
+            {user ? (
+              <>
+                {user.role === "ADMIN" && (
+                  <Button asChild variant="outline" onClick={() => setOpen(false)}>
+                    <Link href="/admin">Admin</Link>
+                  </Button>
+                )}
+                <Button asChild variant="outline" onClick={() => setOpen(false)}>
+                  <Link href="/dashboard">Mon espace</Link>
+                </Button>
+                <form action={logoutUser}>
+                  <Button type="submit" className="w-full">
+                    Déconnexion
+                  </Button>
+                </form>
+              </>
+            ) : (
+              <>
+                <Button asChild variant="outline" onClick={() => setOpen(false)}>
+                  <Link href="/connexion">Connexion</Link>
+                </Button>
+                <Button asChild onClick={() => setOpen(false)}>
+                  <Link href="/inscription">Inscription</Link>
+                </Button>
+              </>
+            )}
           </div>
         </nav>
       )}

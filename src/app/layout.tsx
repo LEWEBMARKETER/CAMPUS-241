@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
+import { auth } from "@/lib/auth";
 
 import "./globals.css";
 
@@ -25,18 +26,20 @@ export const metadata: Metadata = {
     "CAMPUS 241 accompagne collégiens, lycéens et étudiants d'Afrique francophone dans leur orientation scolaire et universitaire : annuaire d'établissements, ressources pédagogiques et boutique.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await auth();
+
   return (
     <html
       lang="fr"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
-        <SiteHeader />
+        <SiteHeader user={session?.user ?? null} />
         <main className="flex-1">{children}</main>
         <SiteFooter />
       </body>

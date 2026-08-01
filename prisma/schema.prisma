@@ -41,6 +41,7 @@ model User {
 
   favorites         Favorite[]
   brochureRequests  BrochureRequest[]
+  downloads         Download[]
 
   @@map("users")
 }
@@ -125,8 +126,21 @@ model LeadMagnet {
   createdAt   DateTime @default(now())
 
   leads       Lead[]
+  downloads   Download[]
 
   @@map("lead_magnets")
+}
+
+model Download {
+  id           String     @id @default(cuid())
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  leadMagnetId String
+  leadMagnet   LeadMagnet @relation(fields: [leadMagnetId], references: [id], onDelete: Cascade)
+  downloadedAt DateTime   @default(now())
+
+  @@unique([userId, leadMagnetId])
+  @@map("downloads")
 }
 
 model Lead {

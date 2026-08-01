@@ -1,15 +1,29 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
-import { PlaceholderPage } from "@/components/placeholder-page";
+import { RegisterForm } from "@/components/auth/register-form";
 
 export const metadata: Metadata = { title: "Inscription" };
 
 export default function InscriptionPage() {
   return (
-    <PlaceholderPage
-      title="Créer mon compte"
-      description="L'inscription élève/étudiant (nom, email, WhatsApp, niveau, ville...) arrive bientôt."
-      sprint="au Sprint 3"
-    />
+    <div className="mx-auto max-w-xl px-4 py-16 sm:px-6">
+      <h1 className="text-3xl font-bold text-neutral-900">Créer mon compte</h1>
+      <p className="mt-2 text-neutral-600">
+        Accédez à votre espace élève/étudiant : favoris, ressources gratuites
+        et suivi personnalisé.
+      </p>
+
+      <div className="mt-8">
+        <RegisterForm />
+      </div>
+
+      <p className="mt-6 text-sm text-neutral-600">
+        Déjà un compte ?{" "}
+        <Link href="/connexion" className="font-medium text-brand-blue hover:underline">
+          Se connecter
+        </Link>
+      </p>
+    </div>
   );
 }
