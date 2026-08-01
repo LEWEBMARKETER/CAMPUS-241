@@ -6,12 +6,7 @@ import { QuickSearch } from "@/components/quick-search";
 import { EstablishmentCard } from "@/components/establishment-card";
 import { ProductCard } from "@/components/product-card";
 import { ArticleCard } from "@/components/article-card";
-
-const featuredEstablishments = [
-  { name: "Lycée d'Excellence Libreville", type: "Lycée", city: "Libreville", isPartner: true },
-  { name: "Université Omar Bongo", type: "Université", city: "Libreville", isPartner: true },
-  { name: "Institut Supérieur de Technologie", type: "Grande école", city: "Port-Gentil", isPartner: false },
-];
+import { prisma } from "@/lib/prisma";
 
 const featuredProducts = [
   {
@@ -49,7 +44,13 @@ const recentArticles = [
   },
 ];
 
-export default function Home() {
+export default async function Home() {
+  const featuredEstablishments = await prisma.establishment.findMany({
+    where: { isPartner: true },
+    orderBy: { name: "asc" },
+    take: 3,
+  });
+
   return (
     <div>
       <section className="bg-gradient-to-b from-brand-blue-light to-white">
@@ -107,7 +108,15 @@ export default function Home() {
         </div>
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {featuredEstablishments.map((establishment) => (
-            <EstablishmentCard key={establishment.name} {...establishment} />
+            <EstablishmentCard
+              key={establishment.id}
+              id={establishment.id}
+              name={establishment.name}
+              type={establishment.type}
+              city={establishment.city}
+              isPartner={establishment.isPartner}
+              description={establishment.description}
+            />
           ))}
         </div>
       </section>
