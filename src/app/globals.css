@@ -1,0 +1,39 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #0b1b26;
+
+  /* Palette officielle CAMPUS 241, extraite du logo */
+  --brand-blue: #05283c; /* navy du logo */
+  --brand-blue-dark: #021620;
+  --brand-blue-light: #eaeff2;
+  --brand-green: #087f58; /* vert du bloc "241" */
+  --brand-green-dark: #066647;
+  --brand-green-light: #e3f5ee;
+  --brand-orange: #f39420; /* ombre portée du bloc "241" */
+  --brand-orange-light: #fdf1e2;
+  --brand-gold: #ffd92b; /* pampille du chapeau */
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-brand-blue: var(--brand-blue);
+  --color-brand-blue-dark: var(--brand-blue-dark);
+  --color-brand-blue-light: var(--brand-blue-light);
+  --color-brand-green: var(--brand-green);
+  --color-brand-green-dark: var(--brand-green-dark);
+  --color-brand-green-light: var(--brand-green-light);
+  --color-brand-orange: var(--brand-orange);
+  --color-brand-orange-light: var(--brand-orange-light);
+  --color-brand-gold: var(--brand-gold);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
