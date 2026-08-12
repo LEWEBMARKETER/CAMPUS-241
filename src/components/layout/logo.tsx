@@ -1,17 +1,19 @@
+import Image from "next/image";
 import Link from "next/link";
 
 import { cn } from "@/lib/utils";
 
 export function Logo({ className }: { className?: string }) {
   return (
-    <Link
-      href="/"
-      className={cn(
-        "text-xl font-extrabold tracking-tight text-brand-blue-dark",
-        className,
-      )}
-    >
-      CAMPUS <span className="text-brand-green">241</span>
+    <Link href="/" className={cn("block shrink-0", className)}>
+      <Image
+        src="/brand/campus241-wordmark.png"
+        alt="CAMPUS 241"
+        width={1627}
+        height={330}
+        priority
+        className="h-8 w-auto sm:h-9"
+      />
     </Link>
   );
 }

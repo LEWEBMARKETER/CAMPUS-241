@@ -14,6 +14,9 @@ export function SiteFooter() {
             d&apos;accès aux ressources éducatives pour les élèves et
             étudiants du Gabon.
           </p>
+          <p className="mt-2 max-w-xs text-xs italic text-neutral-400">
+            &laquo; Si scientiam caram putatis, ignorantiā experimini. &raquo;
+          </p>
         </div>
 
         <div>

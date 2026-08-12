@@ -2,15 +2,18 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #10151f;
+  --foreground: #0b1b26;
 
-  /* Palette CAMPUS 241 : bleu / vert / blanc (cahier des charges §10) */
-  --brand-blue: #1d4ed8;
-  --brand-blue-dark: #1e3a8a;
-  --brand-blue-light: #eff4ff;
-  --brand-green: #16a34a;
-  --brand-green-dark: #15803d;
-  --brand-green-light: #ecfdf3;
+  /* Palette officielle CAMPUS 241, extraite du logo */
+  --brand-blue: #05283c; /* navy du logo */
+  --brand-blue-dark: #021620;
+  --brand-blue-light: #eaeff2;
+  --brand-green: #087f58; /* vert du bloc "241" */
+  --brand-green-dark: #066647;
+  --brand-green-light: #e3f5ee;
+  --brand-orange: #f39420; /* ombre portée du bloc "241" */
+  --brand-orange-light: #fdf1e2;
+  --brand-gold: #ffd92b; /* pampille du chapeau */
 }
 
 @theme inline {
@@ -22,6 +25,9 @@
   --color-brand-green: var(--brand-green);
   --color-brand-green-dark: var(--brand-green-dark);
   --color-brand-green-light: var(--brand-green-light);
+  --color-brand-orange: var(--brand-orange);
+  --color-brand-orange-light: var(--brand-orange-light);
+  --color-brand-gold: var(--brand-gold);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
