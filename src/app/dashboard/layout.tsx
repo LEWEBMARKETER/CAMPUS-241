@@ -4,6 +4,7 @@ import { requireUser } from "@/lib/session";
 
 const dashboardNav = [
   { label: "Profil", href: "/dashboard" },
+  { label: "CAMPUS BAC", href: "/dashboard/bac" },
   { label: "Mes favoris", href: "/dashboard/favoris" },
 ];
 
