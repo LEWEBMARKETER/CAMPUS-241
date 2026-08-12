@@ -1,11 +1,18 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { prisma } from "@/lib/prisma";
+import { requireEditor } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Tableau de bord admin" };
 
 export default async function AdminDashboardPage() {
+  const user = await requireEditor();
+  if (user.role !== "SUPER_ADMIN" && user.role !== "ADMIN") {
+    redirect("/admin/bac/questions");
+  }
+
   const [
     establishmentsCount,
     proEstablishmentsCount,

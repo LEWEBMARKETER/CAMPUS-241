@@ -1,0 +1,3 @@
+Question,Serie,Matiere,Chapitre,Type,Proposition1,Proposition2,Proposition3,Proposition4,ReponseCorrecte,Difficulte,Explication,Source,Annee
+"Soit (u_n) une suite arithmetique de raison 2 et u_0 = 5. Quelle est la valeur de u_4 ?",D,Mathématiques,Suites,QCM,11,13,15,17,13,Moyen,"u_4 = u_0 + 4*raison = 5 + 8 = 13",Banque CAMPUS 241,2025
+"Le carre de tout nombre reel est positif ou nul.",D,Mathématiques,Fonctions,Vrai_Faux,,,,,vrai,Facile,,,

@@ -9,10 +9,12 @@ import {
 } from "@/lib/actions/admin-establishments";
 import { ESTABLISHMENT_TYPE_LABELS } from "@/lib/establishment";
 import { prisma } from "@/lib/prisma";
+import { requireAdmin } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Gestion des établissements" };
 
 export default async function AdminEstablishmentsPage() {
+  await requireAdmin();
   const establishments = await prisma.establishment.findMany({
     orderBy: { name: "asc" },
   });

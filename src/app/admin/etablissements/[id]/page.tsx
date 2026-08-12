@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { EstablishmentForm } from "@/components/admin/establishment-form";
 import { updateEstablishment } from "@/lib/actions/admin-establishments";
 import { prisma } from "@/lib/prisma";
+import { requireAdmin } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Modifier l'établissement" };
 
@@ -14,6 +15,7 @@ export default async function EditEstablishmentPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ error?: string }>;
 }) {
+  await requireAdmin();
   const { id } = await params;
   const { error } = await searchParams;
 

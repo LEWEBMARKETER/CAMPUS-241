@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { EstablishmentForm } from "@/components/admin/establishment-form";
 import { createEstablishment } from "@/lib/actions/admin-establishments";
+import { requireAdmin } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Nouvel établissement" };
 
@@ -10,6 +11,7 @@ export default async function NewEstablishmentPage({
 }: {
   searchParams: Promise<{ error?: string }>;
 }) {
+  await requireAdmin();
   const { error } = await searchParams;
 
   return (

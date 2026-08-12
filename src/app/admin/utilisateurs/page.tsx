@@ -3,11 +3,13 @@ import { Download } from "lucide-react";
 
 import { buttonVariants } from "@/components/ui/button";
 import { prisma } from "@/lib/prisma";
+import { requireAdmin } from "@/lib/session";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Gestion des utilisateurs" };
 
 export default async function AdminUsersPage() {
+  await requireAdmin();
   const users = await prisma.user.findMany({ orderBy: { createdAt: "desc" } });
 
   return (
