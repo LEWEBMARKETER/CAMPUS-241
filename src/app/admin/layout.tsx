@@ -16,6 +16,12 @@ const bacNav = [
   { label: "Import CSV", href: "/admin/bac/questions/importer" },
 ];
 
+const ressourcesNav = [
+  { label: "Catégories", href: "/admin/ressources/categories" },
+  { label: "Matières", href: "/admin/ressources/matieres" },
+  { label: "Ressources", href: "/admin/ressources" },
+];
+
 export default async function AdminLayout({
   children,
 }: {
@@ -49,6 +55,22 @@ export default async function AdminLayout({
             </p>
             <div className="mt-1 flex flex-row gap-1 overflow-x-auto lg:flex-col">
               {bacNav.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium text-neutral-600 hover:bg-brand-blue-light hover:text-brand-blue"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+          <div>
+            <p className="px-3 text-xs font-semibold uppercase tracking-wide text-neutral-400">
+              CAMPUS RESSOURCES
+            </p>
+            <div className="mt-1 flex flex-row gap-1 overflow-x-auto lg:flex-col">
+              {ressourcesNav.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
