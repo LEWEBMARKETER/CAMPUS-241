@@ -24,6 +24,15 @@ export default function InscriptionPage() {
           Se connecter
         </Link>
       </p>
+      <p className="mt-2 text-sm text-neutral-600">
+        Vous représentez un établissement ?{" "}
+        <Link
+          href="/inscription-etablissement"
+          className="font-medium text-brand-blue hover:underline"
+        >
+          Inscrire mon établissement
+        </Link>
+      </p>
     </div>
   );
 }

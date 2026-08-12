@@ -23,7 +23,7 @@ export default async function AnnuairePage({
 }) {
   const params = await searchParams;
 
-  const where: Prisma.EstablishmentWhereInput = {};
+  const where: Prisma.EstablishmentWhereInput = { status: "ACTIVE" };
 
   if (params.q) {
     where.OR = [
@@ -55,7 +55,7 @@ export default async function AnnuairePage({
     prisma.establishment.findMany({
       distinct: ["city"],
       select: { city: true },
-      where: { city: { not: null } },
+      where: { city: { not: null }, status: "ACTIVE" },
       orderBy: { city: "asc" },
     }),
   ]);

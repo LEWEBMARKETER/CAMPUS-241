@@ -35,7 +35,7 @@ export default async function EstablishmentPage({
   const { id } = await params;
   const establishment = await getEstablishment(id);
 
-  if (!establishment) {
+  if (!establishment || establishment.status !== "ACTIVE") {
     notFound();
   }
 

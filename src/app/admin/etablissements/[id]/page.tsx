@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { EstablishmentForm } from "@/components/admin/establishment-form";
+import { EstablishmentModeration } from "@/components/admin/establishment-moderation";
 import { updateEstablishment } from "@/lib/actions/admin-establishments";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/session";
@@ -29,12 +30,20 @@ export default async function EditEstablishmentPage({
       <h2 className="text-xl font-semibold text-neutral-900">
         Modifier {establishment.name}
       </h2>
-      <div className="mt-4 max-w-2xl">
-        <EstablishmentForm
-          establishment={establishment}
-          action={updateEstablishment.bind(null, id)}
-          error={error}
-        />
+
+      <div className="mt-4">
+        <EstablishmentModeration establishment={establishment} />
+      </div>
+
+      <div className="mt-8 max-w-2xl">
+        <h3 className="text-lg font-semibold text-neutral-900">Informations</h3>
+        <div className="mt-3">
+          <EstablishmentForm
+            establishment={establishment}
+            action={updateEstablishment.bind(null, id)}
+            error={error}
+          />
+        </div>
       </div>
     </div>
   );

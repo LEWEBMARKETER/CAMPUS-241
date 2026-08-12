@@ -1,5 +1,7 @@
 "use server";
 
+import { randomBytes } from "node:crypto";
+
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -117,4 +119,114 @@ export async function togglePartnerStatus(id: string, current: boolean) {
   revalidatePath("/admin/etablissements");
   revalidatePath("/annuaire");
   revalidatePath(`/annuaire/${id}`);
+}
+
+async function reviewRevalidate(id: string) {
+  revalidatePath("/admin/etablissements");
+  revalidatePath(`/admin/etablissements/${id}`);
+  revalidatePath("/dashboard/etablissement");
+  revalidatePath("/annuaire");
+  revalidatePath(`/annuaire/${id}`);
+}
+
+export async function approveEstablishment(id: string) {
+  const admin = await requireAdmin();
+  await prisma.establishment.update({
+    where: { id },
+    data: {
+      status: "ACTIVE",
+      rejectionReason: null,
+      reviewedById: admin.id,
+      reviewedAt: new Date(),
+    },
+  });
+  await reviewRevalidate(id);
+}
+
+const rejectSchema = z.object({
+  rejectionReason: z.string().trim().min(3, "Merci d'indiquer un motif."),
+});
+
+export async function rejectEstablishment(id: string, formData: FormData) {
+  const admin = await requireAdmin();
+  const parsed = rejectSchema.safeParse(Object.fromEntries(formData.entries()));
+  if (!parsed.success) {
+    redirect(
+      `/admin/etablissements/${id}?error=${encodeURIComponent(parsed.error.issues[0]?.message ?? "Motif requis.")}`,
+    );
+  }
+
+  await prisma.establishment.update({
+    where: { id },
+    data: {
+      status: "REJECTED",
+      rejectionReason: parsed.data.rejectionReason,
+      reviewedById: admin.id,
+      reviewedAt: new Date(),
+    },
+  });
+  await reviewRevalidate(id);
+  redirect(`/admin/etablissements/${id}`);
+}
+
+export async function suspendEstablishment(id: string) {
+  const admin = await requireAdmin();
+  await prisma.establishment.update({
+    where: { id },
+    data: { status: "SUSPENDED", reviewedById: admin.id, reviewedAt: new Date() },
+  });
+  await reviewRevalidate(id);
+}
+
+export async function toggleVerified(id: string, current: boolean) {
+  await requireAdmin();
+  await prisma.establishment.update({ where: { id }, data: { verified: !current } });
+  await reviewRevalidate(id);
+}
+
+const planSchema = z.object({
+  plan: z.enum(["FREE", "PRO", "PREMIUM"]),
+  planExpiresAt: z.string().trim().optional(),
+});
+
+export async function updateEstablishmentPlan(id: string, formData: FormData) {
+  await requireAdmin();
+  const parsed = planSchema.safeParse(Object.fromEntries(formData.entries()));
+  if (!parsed.success) {
+    redirect(
+      `/admin/etablissements/${id}?error=${encodeURIComponent(parsed.error.issues[0]?.message ?? "Formule invalide.")}`,
+    );
+  }
+
+  await prisma.establishment.update({
+    where: { id },
+    data: {
+      plan: parsed.data.plan,
+      planExpiresAt: parsed.data.planExpiresAt ? new Date(parsed.data.planExpiresAt) : null,
+    },
+  });
+  await reviewRevalidate(id);
+  redirect(`/admin/etablissements/${id}`);
+}
+
+const claimInviteSchema = z.object({
+  claimInviteEmail: z.email("Adresse email invalide."),
+});
+
+export async function generateClaimInvite(id: string, formData: FormData) {
+  await requireAdmin();
+  const parsed = claimInviteSchema.safeParse(Object.fromEntries(formData.entries()));
+  if (!parsed.success) {
+    redirect(
+      `/admin/etablissements/${id}?error=${encodeURIComponent(parsed.error.issues[0]?.message ?? "Email invalide.")}`,
+    );
+  }
+
+  const claimToken = randomBytes(24).toString("hex");
+  await prisma.establishment.update({
+    where: { id },
+    data: { claimInviteEmail: parsed.data.claimInviteEmail, claimToken, claimedAt: null },
+  });
+  await reviewRevalidate(id);
+  redirect(`/admin/etablissements/${id}`);
 }

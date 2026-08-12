@@ -7,11 +7,21 @@ import {
   deleteEstablishment,
   togglePartnerStatus,
 } from "@/lib/actions/admin-establishments";
-import { ESTABLISHMENT_TYPE_LABELS } from "@/lib/establishment";
+import {
+  ESTABLISHMENT_STATUS_LABELS,
+  ESTABLISHMENT_TYPE_LABELS,
+} from "@/lib/establishment";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Gestion des établissements" };
+
+const STATUS_BADGE_CLASS: Record<string, string> = {
+  ACTIVE: "bg-brand-green-light text-brand-green-dark",
+  PENDING_REVIEW: "bg-amber-100 text-amber-700",
+  SUSPENDED: "bg-red-100 text-red-700",
+  REJECTED: "bg-red-100 text-red-700",
+};
 
 export default async function AdminEstablishmentsPage() {
   await requireAdmin();
@@ -38,6 +48,7 @@ export default async function AdminEstablishmentsPage() {
               <th className="px-4 py-3">Nom</th>
               <th className="px-4 py-3">Type</th>
               <th className="px-4 py-3">Ville</th>
+              <th className="px-4 py-3">Statut</th>
               <th className="px-4 py-3">Partenaire</th>
               <th className="px-4 py-3 text-right">Actions</th>
             </tr>
@@ -53,6 +64,13 @@ export default async function AdminEstablishmentsPage() {
                 </td>
                 <td className="px-4 py-3 text-neutral-600">
                   {establishment.city ?? "—"}
+                </td>
+                <td className="px-4 py-3">
+                  <span
+                    className={`rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_BADGE_CLASS[establishment.status]}`}
+                  >
+                    {ESTABLISHMENT_STATUS_LABELS[establishment.status]}
+                  </span>
                 </td>
                 <td className="px-4 py-3">
                   <form
