@@ -21,7 +21,7 @@ const contactChannels = [
   {
     icon: MapPin,
     title: "Zone d'action",
-    value: "Afrique francophone",
+    value: "Gabon",
     href: undefined,
   },
 ];

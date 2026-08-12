@@ -71,7 +71,7 @@ export default async function AnnuairePage({
       </h1>
       <p className="mt-2 max-w-2xl text-neutral-600">
         Collèges, lycées, universités, grandes écoles et centres de formation
-        en Afrique francophone.
+        au Gabon.
       </p>
 
       <div className="mt-6">

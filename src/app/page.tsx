@@ -55,9 +55,9 @@ export default async function Home() {
             S&apos;informer, apprendre, s&apos;entraîner, s&apos;orienter
           </h1>
           <p className="max-w-2xl text-lg text-neutral-600">
-            CAMPUS 241 accompagne les élèves et étudiants d&apos;Afrique
-            francophone dans leur préparation au Baccalauréat, l&apos;accès
-            aux ressources académiques et le choix de leur établissement.
+            CAMPUS 241 accompagne les élèves et étudiants du Gabon dans leur
+            préparation au Baccalauréat, l&apos;accès aux ressources
+            académiques et le choix de leur établissement.
           </p>
 
           <QuickSearch />
