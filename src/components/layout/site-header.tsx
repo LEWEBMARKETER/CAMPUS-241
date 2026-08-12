@@ -13,8 +13,10 @@ import { cn } from "@/lib/utils";
 
 type HeaderUser = {
   name?: string | null;
-  role: "STUDENT" | "ADMIN";
+  role: "SUPER_ADMIN" | "ADMIN" | "EDITOR" | "ETABLISSEMENT" | "UTILISATEUR";
 } | null;
+
+const ADMIN_AREA_ROLES = ["SUPER_ADMIN", "ADMIN"];
 
 export function SiteHeader({ user }: { user: HeaderUser }) {
   const pathname = usePathname();
@@ -49,7 +51,7 @@ export function SiteHeader({ user }: { user: HeaderUser }) {
         <div className="hidden items-center gap-2 lg:flex">
           {user ? (
             <>
-              {user.role === "ADMIN" && (
+              {ADMIN_AREA_ROLES.includes(user.role) && (
                 <Button asChild variant="outline" size="sm">
                   <Link href="/admin">
                     <ShieldCheck className="size-4" />
@@ -110,7 +112,7 @@ export function SiteHeader({ user }: { user: HeaderUser }) {
           <div className="mt-4 flex flex-col gap-2">
             {user ? (
               <>
-                {user.role === "ADMIN" && (
+                {ADMIN_AREA_ROLES.includes(user.role) && (
                   <Button asChild variant="outline" onClick={() => setOpen(false)}>
                     <Link href="/admin">Admin</Link>
                   </Button>

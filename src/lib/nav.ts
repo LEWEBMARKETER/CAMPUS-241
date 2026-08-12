@@ -5,11 +5,8 @@ export type NavItem = {
 
 export const mainNav: NavItem[] = [
   { label: "Accueil", href: "/" },
-  { label: "Annuaire", href: "/annuaire" },
-  { label: "Orientation", href: "/orientation" },
+  { label: "CAMPUS BAC", href: "/bac" },
   { label: "Ressources", href: "/ressources" },
-  { label: "Boutique", href: "/boutique" },
-  { label: "Conseillers", href: "/conseillers" },
-  { label: "Partenaires", href: "/partenaires" },
+  { label: "Annuaire", href: "/annuaire" },
   { label: "Contact", href: "/contact" },
 ];

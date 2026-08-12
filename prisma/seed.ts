@@ -5,6 +5,10 @@ import { PrismaClient } from "@prisma/client";
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
+// ---------------------------------------------------------------------------
+// Annuaire
+// ---------------------------------------------------------------------------
+
 const establishments = [
   {
     name: "Lycée d'Excellence de Libreville",
@@ -20,9 +24,11 @@ const establishments = [
     admissionInfo: "Dossier scolaire + entretien de motivation.",
     budgetRange: "500 000 - 1 000 000 FCFA/an",
     isPartner: true,
+    plan: "PRO" as const,
+    verified: true,
     contactEmail: "contact@lycee-excellence-lbv.ga",
     contactPhone: "+241 01 23 45 67",
-    photos: [] as string[],
+    websiteUrl: "https://lycee-excellence-lbv.ga",
   },
   {
     name: "Université Omar Bongo",
@@ -38,9 +44,11 @@ const establishments = [
     admissionInfo: "Inscription en ligne via le portail national.",
     budgetRange: "Moins de 500 000 FCFA/an",
     isPartner: true,
+    plan: "PRO" as const,
+    verified: true,
     contactEmail: "contact@uob.ga",
     contactPhone: "+241 01 76 20 20",
-    photos: [] as string[],
+    websiteUrl: "https://uob.ga",
   },
   {
     name: "Institut Supérieur de Technologie",
@@ -56,9 +64,10 @@ const establishments = [
     admissionInfo: "Concours d'entrée en juillet, dossier + tests écrits.",
     budgetRange: "1 000 000 - 2 000 000 FCFA/an",
     isPartner: false,
+    plan: "FREE" as const,
+    verified: false,
     contactEmail: "admissions@ist-pg.ga",
     contactPhone: "+241 01 55 44 33",
-    photos: [] as string[],
   },
   {
     name: "École Supérieure de Commerce du Gabon",
@@ -74,9 +83,10 @@ const establishments = [
     admissionInfo: "Dossier de candidature + entretien.",
     budgetRange: "1 000 000 - 2 000 000 FCFA/an",
     isPartner: true,
+    plan: "PRO" as const,
+    verified: true,
     contactEmail: "contact@escg.ga",
     contactPhone: "+241 01 11 22 33",
-    photos: [] as string[],
   },
   {
     name: "Centre de Formation Professionnelle Numérique 241",
@@ -92,9 +102,10 @@ const establishments = [
     admissionInfo: "Inscription continue, sessions tous les trimestres.",
     budgetRange: "Moins de 500 000 FCFA/an",
     isPartner: false,
+    plan: "FREE" as const,
+    verified: false,
     contactEmail: "contact@cfp-numerique241.ga",
     contactPhone: "+241 01 99 88 77",
-    photos: [] as string[],
   },
   {
     name: "Faculté de Médecine de Libreville",
@@ -110,69 +121,281 @@ const establishments = [
     admissionInfo: "Concours d'entrée en première année.",
     budgetRange: "Moins de 500 000 FCFA/an",
     isPartner: false,
+    plan: "FREE" as const,
+    verified: false,
     contactEmail: "scolarite@fml.ga",
     contactPhone: "+241 01 66 55 44",
-    photos: [] as string[],
   },
 ];
 
-const advisors = [
+// ---------------------------------------------------------------------------
+// CAMPUS BAC
+// ---------------------------------------------------------------------------
+
+const seriesData = [
+  { code: "A", name: "Série A — Littéraire" },
+  { code: "C", name: "Série C — Mathématiques et Physique" },
+  { code: "D", name: "Série D — Mathématiques et SVT" },
+];
+
+const subjectsData = [
+  { name: "Mathématiques", slug: "mathematiques", series: ["C", "D"] },
+  { name: "Physique-Chimie", slug: "physique-chimie", series: ["C", "D"] },
+  { name: "SVT", slug: "svt", series: ["D"] },
+  { name: "Français", slug: "francais", series: ["A", "C", "D"] },
+  { name: "Philosophie", slug: "philosophie", series: ["A", "C", "D"] },
+];
+
+const mathChapters = ["Suites", "Probabilités", "Fonctions", "Géométrie"];
+
+const badgesData = [
   {
-    name: "Nadège Ondo",
-    specialty: "Orientation post-Bac scientifique",
-    city: "Libreville",
-    bio: "Conseillère d'orientation depuis 8 ans, spécialisée dans les filières scientifiques et de santé.",
-    whatsapp: "+241 01 23 45 67",
-    calendlyUrl: "https://calendly.com/nadege-ondo",
+    code: "FIRST_SIMULATION",
+    name: "Première simulation",
+    description: "Complétez votre première simulation.",
+    criteriaType: "FIRST_SIMULATION" as const,
+    threshold: null,
   },
   {
-    name: "Éric Mba",
-    specialty: "Grandes écoles & concours",
-    city: "Port-Gentil",
-    bio: "Ancien enseignant, accompagne les élèves dans la préparation des concours d'entrée en grande école.",
-    whatsapp: "+241 01 76 20 20",
-    calendlyUrl: "https://calendly.com/eric-mba",
+    code: "5_SIMULATIONS",
+    name: "5 simulations complétées",
+    description: "Complétez 5 simulations.",
+    criteriaType: "SIMULATIONS_COUNT" as const,
+    threshold: 5,
   },
   {
-    name: "Sylvie Nzamba",
-    specialty: "Orientation universitaire & lettres",
-    city: "Libreville",
-    bio: "Conseillère pédagogique, spécialisée dans les filières lettres, droit et sciences humaines.",
-    whatsapp: "+241 01 55 44 33",
-    calendlyUrl: "https://calendly.com/sylvie-nzamba",
+    code: "100_QUESTIONS",
+    name: "100 questions répondues",
+    description: "Répondez à 100 questions au total.",
+    criteriaType: "QUESTIONS_ANSWERED" as const,
+    threshold: 100,
+  },
+  {
+    code: "80_PERCENT_AVERAGE",
+    name: "80% de moyenne",
+    description: "Atteignez 80% de moyenne sur vos simulations.",
+    criteriaType: "AVERAGE_SCORE" as const,
+    threshold: 80,
   },
 ];
 
-const leadMagnets = [
-  {
-    title: "Guide gratuit : réussir son orientation post-Bac",
-    description:
-      "Un guide complet pour comprendre les filières et faire les bons choix après le Bac.",
-    fileUrl: "https://example.com/guides/orientation-post-bac.pdf",
-  },
-  {
-    title: "Checklist de révisions Bac 2026",
-    description:
-      "La checklist pour organiser ses révisions semaine par semaine avant les examens.",
-    fileUrl: "https://example.com/guides/checklist-bac-2026.pdf",
-  },
+// ---------------------------------------------------------------------------
+// CAMPUS RESSOURCES
+// ---------------------------------------------------------------------------
+
+const niveauxData = ["Collège", "Lycée", "Université"];
+const domainesData = [
+  "Sciences",
+  "Droit",
+  "Économie",
+  "Gestion",
+  "Informatique",
+  "Médecine",
+  "Communication",
 ];
+
+const resourceSubjectsData = ["Comptabilité", "Droit des affaires", "Algorithmique"];
 
 async function main() {
-  await prisma.download.deleteMany();
+  // --- Nettoyage (ordre inverse des dépendances) -----------------------------
+  await prisma.resourceDownload.deleteMany();
+  await prisma.resourceView.deleteMany();
+  await prisma.resource.deleteMany();
+  await prisma.resourceSubject.deleteMany();
+  await prisma.resourceCategory.deleteMany();
+
+  await prisma.userBadge.deleteMany();
+  await prisma.badge.deleteMany();
+  await prisma.simulationAnswer.deleteMany();
+  await prisma.simulation.deleteMany();
+  await prisma.questionChoice.deleteMany();
+  await prisma.question.deleteMany();
+  await prisma.chapter.deleteMany();
+  await prisma.seriesSubject.deleteMany();
+  await prisma.subject.deleteMany();
+  await prisma.series.deleteMany();
+
   await prisma.brochureRequest.deleteMany();
   await prisma.favorite.deleteMany();
-  await prisma.lead.deleteMany();
   await prisma.establishment.deleteMany();
-  await prisma.advisor.deleteMany();
-  await prisma.leadMagnet.deleteMany();
 
+  // --- Annuaire ---------------------------------------------------------------
   await prisma.establishment.createMany({ data: establishments });
-  await prisma.advisor.createMany({ data: advisors });
-  await prisma.leadMagnet.createMany({ data: leadMagnets });
+
+  // --- CAMPUS BAC ---------------------------------------------------------------
+  const series = new Map<string, string>();
+  for (const s of seriesData) {
+    const created = await prisma.series.create({
+      data: { code: s.code, name: s.name },
+    });
+    series.set(s.code, created.id);
+  }
+
+  const subjects = new Map<string, string>();
+  for (const s of subjectsData) {
+    const created = await prisma.subject.create({
+      data: { name: s.name, slug: s.slug },
+    });
+    subjects.set(s.slug, created.id);
+    for (const code of s.series) {
+      await prisma.seriesSubject.create({
+        data: { seriesId: series.get(code)!, subjectId: created.id },
+      });
+    }
+  }
+
+  const mathSubjectId = subjects.get("mathematiques")!;
+  const chapters = new Map<string, string>();
+  for (const name of mathChapters) {
+    const created = await prisma.chapter.create({
+      data: { subjectId: mathSubjectId, name },
+    });
+    chapters.set(name, created.id);
+  }
+
+  const demoQuestions = [
+    {
+      chapter: "Suites",
+      prompt: "Soit (u_n) une suite arithmétique de raison 3 et u_0 = 2. Quelle est la valeur de u_5 ?",
+      choices: ["15", "17", "20", "12"],
+      correctIndex: 1,
+    },
+    {
+      chapter: "Suites",
+      prompt: "Une suite géométrique de raison 2 et de premier terme 1 : quel est son 4e terme (u_3) ?",
+      choices: ["6", "7", "8", "9"],
+      correctIndex: 2,
+    },
+    {
+      chapter: "Probabilités",
+      prompt: "On lance un dé équilibré à 6 faces. Quelle est la probabilité d'obtenir un nombre pair ?",
+      choices: ["1/6", "1/3", "1/2", "2/3"],
+      correctIndex: 2,
+    },
+    {
+      chapter: "Fonctions",
+      prompt: "Quelle est la dérivée de f(x) = x² + 3x sur ℝ ?",
+      choices: ["2x + 3", "x + 3", "2x", "x²"],
+      correctIndex: 0,
+    },
+    {
+      chapter: "Géométrie",
+      prompt: "Dans un triangle rectangle, quelle relation relie les côtés (théorème de Pythagore) ?",
+      choices: ["a + b = c", "a² + b² = c²", "a × b = c", "a² - b² = c²"],
+      correctIndex: 1,
+    },
+  ];
+
+  for (const q of demoQuestions) {
+    await prisma.question.create({
+      data: {
+        seriesId: series.get("D")!,
+        subjectId: mathSubjectId,
+        chapterId: chapters.get(q.chapter)!,
+        type: "QCM",
+        difficulty: "MOYEN",
+        prompt: q.prompt,
+        published: true,
+        choices: {
+          create: q.choices.map((label, index) => ({
+            label,
+            isCorrect: index === q.correctIndex,
+            order: index,
+          })),
+        },
+      },
+    });
+  }
+
+  await prisma.badge.createMany({ data: badgesData });
+
+  // --- CAMPUS RESSOURCES ---------------------------------------------------------
+  const niveaux = new Map<string, string>();
+  for (const [index, name] of niveauxData.entries()) {
+    const created = await prisma.resourceCategory.create({
+      data: { name, slug: `niveau-${name.toLowerCase()}`, kind: "NIVEAU", order: index },
+    });
+    niveaux.set(name, created.id);
+  }
+
+  const domaines = new Map<string, string>();
+  for (const [index, name] of domainesData.entries()) {
+    const created = await prisma.resourceCategory.create({
+      data: {
+        name,
+        slug: `domaine-${name.toLowerCase().replace(/\s+/g, "-")}`,
+        kind: "DOMAINE",
+        order: index,
+      },
+    });
+    domaines.set(name, created.id);
+  }
+
+  const filiereLicence2Eco = await prisma.resourceCategory.create({
+    data: {
+      name: "Licence 2 Économie",
+      slug: "filiere-licence-2-economie",
+      kind: "FILIERE",
+      parentId: domaines.get("Économie")!,
+    },
+  });
+
+  const resourceSubjects = new Map<string, string>();
+  for (const name of resourceSubjectsData) {
+    const created = await prisma.resourceSubject.create({
+      data: { name, slug: name.toLowerCase().replace(/\s+/g, "-") },
+    });
+    resourceSubjects.set(name, created.id);
+  }
+
+  await prisma.resource.createMany({
+    data: [
+      {
+        title: "Cours de comptabilité analytique",
+        slug: "cours-comptabilite-analytique",
+        description: "Introduction aux méthodes de calcul des coûts en comptabilité analytique.",
+        author: "Équipe CAMPUS 241",
+        type: "COURS",
+        format: "PDF",
+        niveauId: niveaux.get("Université")!,
+        domaineId: domaines.get("Économie")!,
+        filiereId: filiereLicence2Eco.id,
+        subjectId: resourceSubjects.get("Comptabilité")!,
+        isPremium: true,
+        status: "PUBLIE",
+        publishedAt: new Date(),
+      },
+      {
+        title: "Fiche de révision : les suites numériques",
+        slug: "fiche-revision-suites-numeriques",
+        description: "Résumé des formules essentielles sur les suites arithmétiques et géométriques.",
+        author: "Équipe CAMPUS 241",
+        type: "FICHE_REVISION",
+        format: "PDF",
+        niveauId: niveaux.get("Lycée")!,
+        domaineId: domaines.get("Sciences")!,
+        isPremium: false,
+        status: "PUBLIE",
+        publishedAt: new Date(),
+      },
+      {
+        title: "Annales Bac 2025 — Mathématiques Série D",
+        slug: "annales-bac-2025-mathematiques-serie-d",
+        description: "Sujets et corrigés des épreuves de mathématiques de la session 2025.",
+        author: "Équipe CAMPUS 241",
+        type: "ANNALE",
+        format: "PDF",
+        niveauId: niveaux.get("Lycée")!,
+        domaineId: domaines.get("Sciences")!,
+        isPremium: false,
+        status: "PUBLIE",
+        publishedAt: new Date(),
+      },
+    ],
+  });
 
   console.log(
-    `Seed terminé : ${establishments.length} établissements, ${advisors.length} conseillers, ${leadMagnets.length} guides gratuits.`,
+    `Seed terminé : ${establishments.length} établissements, ${seriesData.length} séries, ${subjectsData.length} matières, ${mathChapters.length} chapitres, ${demoQuestions.length} questions, ${badgesData.length} badges, ${niveauxData.length + domainesData.length + 1} catégories ressources, 3 ressources.`,
   );
 }
 

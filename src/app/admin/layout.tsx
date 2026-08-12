@@ -5,8 +5,6 @@ import { requireAdmin } from "@/lib/session";
 const adminNav = [
   { label: "Tableau de bord", href: "/admin" },
   { label: "Établissements", href: "/admin/etablissements" },
-  { label: "Conseillers", href: "/admin/conseillers" },
-  { label: "Articles", href: "/admin/articles" },
   { label: "Utilisateurs", href: "/admin/utilisateurs" },
 ];
 

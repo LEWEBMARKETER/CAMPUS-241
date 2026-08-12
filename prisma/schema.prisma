@@ -6,9 +6,16 @@ datasource db {
   provider = "postgresql"
 }
 
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
 enum UserRole {
-  STUDENT
+  SUPER_ADMIN
   ADMIN
+  EDITOR
+  ETABLISSEMENT
+  UTILISATEUR
 }
 
 enum EstablishmentType {
@@ -23,136 +30,171 @@ enum PublicOrPrivate {
   PRIVE
 }
 
-model User {
-  id                String   @id @default(cuid())
-  nom               String
-  prenom            String
-  email             String   @unique
-  whatsapp          String?
-  dateNaissance     DateTime?
-  niveau            String?
-  classeOuNiveauUniv String?
-  serie             String?
-  ville             String?
-  passwordHash      String
-  role              UserRole @default(STUDENT)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+enum EstablishmentPlan {
+  FREE
+  PRO
+  PREMIUM
+}
 
-  favorites         Favorite[]
-  brochureRequests  BrochureRequest[]
-  downloads         Download[]
+enum EstablishmentStatus {
+  PENDING_REVIEW
+  ACTIVE
+  SUSPENDED
+  REJECTED
+}
+
+enum QuestionType {
+  QCM
+  QCM_MULTIPLE
+  VRAI_FAUX
+  REPONSE_COURTE
+}
+
+enum QuestionDifficulty {
+  FACILE
+  MOYEN
+  DIFFICILE
+}
+
+enum SimulationMode {
+  ENTRAINEMENT
+  EXAMEN
+}
+
+enum SimulationStatus {
+  EN_COURS
+  TERMINEE
+  ABANDONNEE
+}
+
+enum BadgeCriteriaType {
+  FIRST_SIMULATION
+  SIMULATIONS_COUNT
+  QUESTIONS_ANSWERED
+  AVERAGE_SCORE
+}
+
+enum ResourceCategoryKind {
+  NIVEAU
+  DOMAINE
+  FILIERE
+}
+
+enum ResourceType {
+  COURS
+  FICHE_REVISION
+  ANNALE
+  EXERCICE
+  CORRIGE
+  MEMOIRE
+  GUIDE
+  LIVRE_NUMERIQUE
+  SUPPORT_PEDAGOGIQUE
+}
+
+enum ResourceFormat {
+  PDF
+  IMAGE
+  DOCUMENT
+  VIDEO
+  AUDIO
+  INTERACTIF
+}
+
+enum ResourceStatus {
+  BROUILLON
+  EN_ATTENTE
+  VALIDE
+  PUBLIE
+  ARCHIVE
+}
+
+// ---------------------------------------------------------------------------
+// Utilisateurs
+// ---------------------------------------------------------------------------
+
+model User {
+  id                 String    @id @default(cuid())
+  nom                String
+  prenom             String
+  email              String    @unique
+  whatsapp           String?
+  dateNaissance      DateTime?
+  niveau             String?
+  classeOuNiveauUniv String?
+  serie              String?
+  ville              String?
+  passwordHash       String
+  role               UserRole  @default(UTILISATEUR)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  favorites             Favorite[]
+  brochureRequests      BrochureRequest[]
+  simulations           Simulation[]
+  badges                UserBadge[]
+  resourceViews         ResourceView[]     @relation("ResourceViewedBy")
+  resourceDownloads     ResourceDownload[] @relation("ResourceDownloadedBy")
+  createdQuestions      Question[]         @relation("QuestionCreatedBy")
+  createdResources      Resource[]         @relation("ResourceCreatedBy")
+  ownedEstablishments   Establishment[]    @relation("EstablishmentOwner")
+  reviewedEstablishments Establishment[]   @relation("EstablishmentReviewer")
 
   @@map("users")
 }
 
+// ---------------------------------------------------------------------------
+// Annuaire
+// ---------------------------------------------------------------------------
+
 model Establishment {
-  id               String            @id @default(cuid())
-  name             String
-  type             EstablishmentType
-  description      String?
-  logoUrl          String?
-  photos           String[]          @default([])
-  address          String?
-  city             String?
-  country          String?
-  publicOrPrivate  PublicOrPrivate?
-  filieres         String[]          @default([])
-  niveauAdmission  String?
-  admissionInfo    String?
-  budgetRange      String?
-  isPartner        Boolean           @default(false)
-  contactEmail     String?
-  contactPhone     String?
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
+  id              String            @id @default(cuid())
+  name            String
+  type            EstablishmentType
+  description     String?
+  logoUrl         String?
+  photos          String[]          @default([])
+  address         String?
+  city            String?
+  country         String?
+  publicOrPrivate PublicOrPrivate?
+  filieres        String[]          @default([])
+  niveauAdmission String?
+  admissionInfo   String?
+  budgetRange     String?
+  isPartner       Boolean           @default(false)
+  contactEmail    String?
+  contactPhone    String?
+  websiteUrl      String?
+
+  plan          EstablishmentPlan   @default(FREE)
+  planExpiresAt DateTime?
+  verified      Boolean             @default(false)
+  status        EstablishmentStatus @default(ACTIVE)
+
+  ownerUserId      String?
+  owner            User?   @relation("EstablishmentOwner", fields: [ownerUserId], references: [id])
+  responsableNom   String?
+  responsableEmail String?
+  responsablePhone String?
+  justificatifUrls String[] @default([])
+
+  claimInviteEmail String?
+  claimToken       String?   @unique
+  claimedAt        DateTime?
+
+  reviewedById    String?
+  reviewedBy      User?     @relation("EstablishmentReviewer", fields: [reviewedById], references: [id])
+  reviewedAt      DateTime?
+  rejectionReason String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   favorites        Favorite[]
   brochureRequests BrochureRequest[]
 
   @@map("establishments")
-}
-
-model Advisor {
-  id           String   @id @default(cuid())
-  name         String
-  specialty    String?
-  city         String?
-  bio          String?
-  photoUrl     String?
-  whatsapp     String?
-  calendlyUrl  String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  @@map("advisors")
-}
-
-model Product {
-  id          String   @id @default(cuid())
-  title       String
-  description String?
-  priceLabel  String?
-  imageUrl    String?
-  chariowUrl  String
-  category    String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@map("products")
-}
-
-model Article {
-  id             String    @id @default(cuid())
-  title          String
-  slug           String    @unique
-  excerpt        String?
-  content        String
-  coverImageUrl  String?
-  category       String?
-  authorName     String?
-  publishedAt    DateTime?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-
-  @@map("articles")
-}
-
-model LeadMagnet {
-  id          String   @id @default(cuid())
-  title       String
-  description String?
-  fileUrl     String
-  createdAt   DateTime @default(now())
-
-  leads       Lead[]
-  downloads   Download[]
-
-  @@map("lead_magnets")
-}
-
-model Download {
-  id           String     @id @default(cuid())
-  userId       String
-  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  leadMagnetId String
-  leadMagnet   LeadMagnet @relation(fields: [leadMagnetId], references: [id], onDelete: Cascade)
-  downloadedAt DateTime   @default(now())
-
-  @@unique([userId, leadMagnetId])
-  @@map("downloads")
-}
-
-model Lead {
-  id           String     @id @default(cuid())
-  name         String
-  email        String
-  whatsapp     String?
-  leadMagnetId String
-  leadMagnet   LeadMagnet @relation(fields: [leadMagnetId], references: [id])
-  createdAt    DateTime   @default(now())
-
-  @@map("leads")
 }
 
 model Favorite {
@@ -179,4 +221,289 @@ model BrochureRequest {
   createdAt       DateTime      @default(now())
 
   @@map("brochure_requests")
+}
+
+// ---------------------------------------------------------------------------
+// CAMPUS BAC
+// ---------------------------------------------------------------------------
+
+model Series {
+  id        String   @id @default(cuid())
+  code      String
+  name      String
+  country   String   @default("GA")
+  order     Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  subjects    SeriesSubject[]
+  questions   Question[]
+  simulations Simulation[]
+
+  @@unique([country, code])
+  @@map("bac_series")
+}
+
+model Subject {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  order     Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  series      SeriesSubject[]
+  chapters    Chapter[]
+  questions   Question[]
+  simulations Simulation[]
+
+  @@map("bac_subjects")
+}
+
+model SeriesSubject {
+  seriesId  String
+  series    Series  @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  subjectId String
+  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  order     Int     @default(0)
+
+  @@id([seriesId, subjectId])
+  @@map("bac_series_subjects")
+}
+
+model Chapter {
+  id        String   @id @default(cuid())
+  subjectId String
+  subject   Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  name      String
+  order     Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  questions Question[]
+
+  @@unique([subjectId, name])
+  @@map("bac_chapters")
+}
+
+model Question {
+  id                String             @id @default(cuid())
+  seriesId          String
+  series            Series             @relation(fields: [seriesId], references: [id])
+  subjectId         String
+  subject           Subject            @relation(fields: [subjectId], references: [id])
+  chapterId         String
+  chapter           Chapter            @relation(fields: [chapterId], references: [id])
+  type              QuestionType       @default(QCM)
+  difficulty        QuestionDifficulty @default(MOYEN)
+  prompt            String
+  explanation       String?
+  source            String?
+  examYear          Int?
+  correctAnswerText String?
+  published         Boolean            @default(false)
+  createdById       String?
+  createdBy         User?              @relation("QuestionCreatedBy", fields: [createdById], references: [id])
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  choices           QuestionChoice[]
+  simulationAnswers SimulationAnswer[]
+
+  @@index([seriesId, subjectId, chapterId])
+  @@index([published])
+  @@map("bac_questions")
+}
+
+model QuestionChoice {
+  id         String   @id @default(cuid())
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  label      String
+  isCorrect  Boolean  @default(false)
+  order      Int      @default(0)
+
+  @@map("bac_question_choices")
+}
+
+model Simulation {
+  id                     String           @id @default(cuid())
+  userId                 String
+  user                   User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  seriesId               String
+  series                 Series           @relation(fields: [seriesId], references: [id])
+  subjectId              String
+  subject                Subject          @relation(fields: [subjectId], references: [id])
+  mode                   SimulationMode
+  status                 SimulationStatus @default(EN_COURS)
+  chapterIds             String[]         @default([])
+  requestedQuestionCount Int
+  durationSeconds        Int?
+  startedAt              DateTime         @default(now())
+  finishedAt             DateTime?
+  timeSpentSeconds       Int?
+  score                  Float?
+  correctCount           Int?
+  incorrectCount         Int?
+  unansweredCount        Int?
+  createdAt              DateTime         @default(now())
+
+  answers SimulationAnswer[]
+
+  @@index([userId, createdAt])
+  @@map("bac_simulations")
+}
+
+model SimulationAnswer {
+  id                String     @id @default(cuid())
+  simulationId      String
+  simulation        Simulation @relation(fields: [simulationId], references: [id], onDelete: Cascade)
+  questionId        String
+  question          Question   @relation(fields: [questionId], references: [id])
+  selectedChoiceIds String[]   @default([])
+  answerText        String?
+  isCorrect         Boolean?
+  order             Int        @default(0)
+
+  @@unique([simulationId, questionId])
+  @@map("bac_simulation_answers")
+}
+
+model Badge {
+  id           String            @id @default(cuid())
+  code         String            @unique
+  name         String
+  description  String?
+  iconUrl      String?
+  criteriaType BadgeCriteriaType
+  threshold    Int?
+  createdAt    DateTime          @default(now())
+
+  userBadges UserBadge[]
+
+  @@map("bac_badges")
+}
+
+model UserBadge {
+  id       String   @id @default(cuid())
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badgeId  String
+  badge    Badge    @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+  earnedAt DateTime @default(now())
+
+  @@unique([userId, badgeId])
+  @@map("bac_user_badges")
+}
+
+// ---------------------------------------------------------------------------
+// CAMPUS RESSOURCES
+// ---------------------------------------------------------------------------
+
+model ResourceCategory {
+  id       String               @id @default(cuid())
+  name     String
+  slug     String               @unique
+  kind     ResourceCategoryKind
+  parentId String?
+  parent   ResourceCategory?    @relation("CategoryTree", fields: [parentId], references: [id], onDelete: Restrict)
+  children ResourceCategory[]   @relation("CategoryTree")
+  order    Int                  @default(0)
+  isActive Boolean              @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  resourcesAsCategory Resource[] @relation("ResourceCategory")
+  resourcesAsNiveau   Resource[] @relation("ResourceNiveau")
+  resourcesAsDomaine  Resource[] @relation("ResourceDomaine")
+  resourcesAsFiliere  Resource[] @relation("ResourceFiliere")
+
+  @@index([parentId])
+  @@map("resource_categories")
+}
+
+model ResourceSubject {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  resources Resource[]
+
+  @@map("resource_subjects")
+}
+
+model Resource {
+  id            String   @id @default(cuid())
+  title         String
+  slug          String   @unique
+  description   String?
+  author        String?
+  type          ResourceType
+  format        ResourceFormat @default(PDF)
+  fileUrl       String?
+  coverImageUrl String?
+  fileSizeBytes Int?
+
+  categoryId String?
+  category   ResourceCategory? @relation("ResourceCategory", fields: [categoryId], references: [id])
+  niveauId   String?
+  niveau     ResourceCategory? @relation("ResourceNiveau", fields: [niveauId], references: [id])
+  domaineId  String?
+  domaine    ResourceCategory? @relation("ResourceDomaine", fields: [domaineId], references: [id])
+  filiereId  String?
+  filiere    ResourceCategory? @relation("ResourceFiliere", fields: [filiereId], references: [id])
+  subjectId  String?
+  subject    ResourceSubject?  @relation(fields: [subjectId], references: [id])
+
+  isPremium  Boolean @default(false)
+  priceLabel String?
+
+  status      ResourceStatus @default(BROUILLON)
+  publishedAt DateTime?
+
+  viewCount     Int @default(0)
+  downloadCount Int @default(0)
+
+  createdById String?
+  createdBy   User?    @relation("ResourceCreatedBy", fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  views     ResourceView[]
+  downloads ResourceDownload[]
+
+  @@index([status, categoryId])
+  @@index([niveauId, domaineId, filiereId])
+  @@index([type, isPremium])
+  @@map("resources")
+}
+
+model ResourceView {
+  id         String   @id @default(cuid())
+  resourceId String
+  resource   Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  userId     String?
+  user       User?    @relation("ResourceViewedBy", fields: [userId], references: [id])
+  viewedAt   DateTime @default(now())
+
+  @@index([resourceId, viewedAt])
+  @@map("resource_views")
+}
+
+model ResourceDownload {
+  id           String   @id @default(cuid())
+  resourceId   String
+  resource     Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  userId       String?
+  user         User?    @relation("ResourceDownloadedBy", fields: [userId], references: [id])
+  downloadedAt DateTime @default(now())
+
+  @@index([resourceId, downloadedAt])
+  @@map("resource_downloads")
 }

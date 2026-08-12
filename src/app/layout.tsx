@@ -19,11 +19,11 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "CAMPUS 241 — Orientation, apprentissage & annuaire scolaire",
+    default: "CAMPUS 241 — Bac, ressources & annuaire scolaire",
     template: "%s · CAMPUS 241",
   },
   description:
-    "CAMPUS 241 accompagne collégiens, lycéens et étudiants d'Afrique francophone dans leur orientation scolaire et universitaire : annuaire d'établissements, ressources pédagogiques et boutique.",
+    "CAMPUS 241 accompagne les élèves et étudiants du Gabon : simulateur d'épreuves du Baccalauréat (CAMPUS BAC), bibliothèque de ressources académiques (CAMPUS RESSOURCES) et annuaire des établissements d'enseignement.",
 };
 
 export default async function RootLayout({

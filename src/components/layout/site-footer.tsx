@@ -10,9 +10,9 @@ export function SiteFooter() {
         <div>
           <Logo />
           <p className="mt-3 max-w-xs text-sm text-neutral-600">
-            La plateforme d&apos;orientation, d&apos;apprentissage et de
-            gestion scolaire pour les collégiens, lycéens et étudiants
-            d&apos;Afrique francophone.
+            La plateforme d&apos;orientation, de préparation académique et
+            d&apos;accès aux ressources éducatives pour les élèves et
+            étudiants du Gabon.
           </p>
         </div>
 

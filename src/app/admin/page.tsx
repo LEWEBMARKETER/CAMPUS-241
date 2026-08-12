@@ -8,30 +8,30 @@ export const metadata: Metadata = { title: "Tableau de bord admin" };
 export default async function AdminDashboardPage() {
   const [
     establishmentsCount,
-    partnersCount,
-    advisorsCount,
+    proEstablishmentsCount,
     usersCount,
-    leadsCount,
     brochureRequestsCount,
-    articlesCount,
+    questionsCount,
+    simulationsCount,
+    resourcesCount,
   ] = await Promise.all([
     prisma.establishment.count(),
-    prisma.establishment.count({ where: { isPartner: true } }),
-    prisma.advisor.count(),
+    prisma.establishment.count({ where: { plan: { in: ["PRO", "PREMIUM"] } } }),
     prisma.user.count(),
-    prisma.lead.count(),
     prisma.brochureRequest.count(),
-    prisma.article.count(),
+    prisma.question.count(),
+    prisma.simulation.count(),
+    prisma.resource.count(),
   ]);
 
   const stats = [
     { label: "Établissements", value: establishmentsCount },
-    { label: "Dont partenaires", value: partnersCount },
-    { label: "Conseillers", value: advisorsCount },
+    { label: "Dont PRO/PREMIUM", value: proEstablishmentsCount },
     { label: "Utilisateurs inscrits", value: usersCount },
-    { label: "Leads collectés", value: leadsCount },
     { label: "Demandes de brochure", value: brochureRequestsCount },
-    { label: "Articles publiés", value: articlesCount },
+    { label: "Questions BAC", value: questionsCount },
+    { label: "Simulations réalisées", value: simulationsCount },
+    { label: "Ressources", value: resourcesCount },
   ];
 
   return (

@@ -5,8 +5,6 @@ import { requireUser } from "@/lib/session";
 const dashboardNav = [
   { label: "Profil", href: "/dashboard" },
   { label: "Mes favoris", href: "/dashboard/favoris" },
-  { label: "Mes téléchargements", href: "/dashboard/telechargements" },
-  { label: "Mes achats", href: "/dashboard/achats" },
 ];
 
 export default async function DashboardLayout({
