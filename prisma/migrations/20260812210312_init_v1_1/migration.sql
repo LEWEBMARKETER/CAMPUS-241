@@ -1,17 +1,11 @@
 -- CreateEnum
-CREATE TYPE "UserRole" AS ENUM ('SUPER_ADMIN', 'ADMIN', 'EDITOR', 'ETABLISSEMENT', 'UTILISATEUR');
+CREATE TYPE "UserRole" AS ENUM ('SUPER_ADMIN', 'ADMIN', 'EDITOR', 'UTILISATEUR');
 
 -- CreateEnum
-CREATE TYPE "EstablishmentType" AS ENUM ('COLLEGE_LYCEE', 'UNIVERSITE', 'GRANDE_ECOLE', 'CENTRE_FORMATION');
+CREATE TYPE "EstablishmentLevel" AS ENUM ('PRIMAIRE', 'COLLEGE', 'LYCEE', 'SUPERIEUR');
 
 -- CreateEnum
 CREATE TYPE "PublicOrPrivate" AS ENUM ('PUBLIC', 'PRIVE');
-
--- CreateEnum
-CREATE TYPE "EstablishmentPlan" AS ENUM ('FREE', 'PRO', 'PREMIUM');
-
--- CreateEnum
-CREATE TYPE "EstablishmentStatus" AS ENUM ('PENDING_REVIEW', 'ACTIVE', 'SUSPENDED', 'REJECTED');
 
 -- CreateEnum
 CREATE TYPE "QuestionType" AS ENUM ('QCM', 'QCM_MULTIPLE', 'VRAI_FAUX', 'REPONSE_COURTE');
@@ -64,37 +58,36 @@ CREATE TABLE "users" (
 CREATE TABLE "establishments" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "type" "EstablishmentType" NOT NULL,
-    "description" TEXT,
+    "acronym" TEXT,
     "logoUrl" TEXT,
-    "photos" TEXT[] DEFAULT ARRAY[]::TEXT[],
-    "address" TEXT,
+    "publicOrPrivate" "PublicOrPrivate" NOT NULL,
+    "levels" "EstablishmentLevel"[],
+    "description" TEXT,
+    "province" TEXT,
     "city" TEXT,
-    "country" TEXT,
-    "publicOrPrivate" "PublicOrPrivate",
-    "filieres" TEXT[] DEFAULT ARRAY[]::TEXT[],
-    "niveauAdmission" TEXT,
-    "admissionInfo" TEXT,
-    "budgetRange" TEXT,
-    "isPartner" BOOLEAN NOT NULL DEFAULT false,
-    "contactEmail" TEXT,
-    "contactPhone" TEXT,
+    "district" TEXT,
+    "address" TEXT,
+    "latitude" DOUBLE PRECISION,
+    "longitude" DOUBLE PRECISION,
+    "googleMapsUrl" TEXT,
+    "classesOffered" TEXT[] DEFAULT ARRAY[]::TEXT[],
+    "filieresSuperieur" TEXT[] DEFAULT ARRAY[]::TEXT[],
+    "diplomasOffered" TEXT[] DEFAULT ARRAY[]::TEXT[],
+    "phone" TEXT,
+    "whatsapp" TEXT,
+    "email" TEXT,
+    "secretariatContact" TEXT,
     "websiteUrl" TEXT,
-    "plan" "EstablishmentPlan" NOT NULL DEFAULT 'FREE',
-    "planExpiresAt" TIMESTAMP(3),
+    "facebookUrl" TEXT,
+    "instagramUrl" TEXT,
+    "linkedinUrl" TEXT,
+    "tiktokUrl" TEXT,
+    "schedule" TEXT,
+    "registrationPeriod" TEXT,
+    "admissionConditions" TEXT,
+    "tuitionFees" TEXT,
     "verified" BOOLEAN NOT NULL DEFAULT false,
-    "status" "EstablishmentStatus" NOT NULL DEFAULT 'ACTIVE',
-    "ownerUserId" TEXT,
-    "responsableNom" TEXT,
-    "responsableEmail" TEXT,
-    "responsablePhone" TEXT,
-    "justificatifUrls" TEXT[] DEFAULT ARRAY[]::TEXT[],
-    "claimInviteEmail" TEXT,
-    "claimToken" TEXT,
-    "claimedAt" TIMESTAMP(3),
-    "reviewedById" TEXT,
-    "reviewedAt" TIMESTAMP(3),
-    "rejectionReason" TEXT,
+    "archived" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -108,19 +101,6 @@ CREATE TABLE "favorites" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "favorites_pkey" PRIMARY KEY ("userId","establishmentId")
-);
-
--- CreateTable
-CREATE TABLE "brochure_requests" (
-    "id" TEXT NOT NULL,
-    "userId" TEXT,
-    "establishmentId" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-    "email" TEXT NOT NULL,
-    "whatsapp" TEXT,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "brochure_requests_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -344,9 +324,6 @@ CREATE TABLE "resource_downloads" (
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "establishments_claimToken_key" ON "establishments"("claimToken");
-
--- CreateIndex
 CREATE UNIQUE INDEX "bac_series_country_code_key" ON "bac_series"("country", "code");
 
 -- CreateIndex
@@ -401,22 +378,10 @@ CREATE INDEX "resource_views_resourceId_viewedAt_idx" ON "resource_views"("resou
 CREATE INDEX "resource_downloads_resourceId_downloadedAt_idx" ON "resource_downloads"("resourceId", "downloadedAt");
 
 -- AddForeignKey
-ALTER TABLE "establishments" ADD CONSTRAINT "establishments_ownerUserId_fkey" FOREIGN KEY ("ownerUserId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "establishments" ADD CONSTRAINT "establishments_reviewedById_fkey" FOREIGN KEY ("reviewedById") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "favorites" ADD CONSTRAINT "favorites_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "favorites" ADD CONSTRAINT "favorites_establishmentId_fkey" FOREIGN KEY ("establishmentId") REFERENCES "establishments"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "brochure_requests" ADD CONSTRAINT "brochure_requests_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "brochure_requests" ADD CONSTRAINT "brochure_requests_establishmentId_fkey" FOREIGN KEY ("establishmentId") REFERENCES "establishments"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "bac_series_subjects" ADD CONSTRAINT "bac_series_subjects_seriesId_fkey" FOREIGN KEY ("seriesId") REFERENCES "bac_series"("id") ON DELETE CASCADE ON UPDATE CASCADE;

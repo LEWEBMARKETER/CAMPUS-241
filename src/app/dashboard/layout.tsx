@@ -14,11 +14,7 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const user = await requireUser();
-  const nav =
-    user.role === "ETABLISSEMENT"
-      ? [...dashboardNav, { label: "Mon établissement", href: "/dashboard/etablissement" }]
-      : dashboardNav;
+  await requireUser();
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
@@ -26,7 +22,7 @@ export default async function DashboardLayout({
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[220px_1fr]">
         <nav className="flex flex-row gap-1 overflow-x-auto lg:flex-col">
-          {nav.map((item) => (
+          {dashboardNav.map((item) => (
             <Link
               key={item.href}
               href={item.href}

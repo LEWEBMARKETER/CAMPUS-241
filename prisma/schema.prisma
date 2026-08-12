@@ -14,33 +14,19 @@ enum UserRole {
   SUPER_ADMIN
   ADMIN
   EDITOR
-  ETABLISSEMENT
   UTILISATEUR
 }
 
-enum EstablishmentType {
-  COLLEGE_LYCEE
-  UNIVERSITE
-  GRANDE_ECOLE
-  CENTRE_FORMATION
+enum EstablishmentLevel {
+  PRIMAIRE
+  COLLEGE
+  LYCEE
+  SUPERIEUR
 }
 
 enum PublicOrPrivate {
   PUBLIC
   PRIVE
-}
-
-enum EstablishmentPlan {
-  FREE
-  PRO
-  PREMIUM
-}
-
-enum EstablishmentStatus {
-  PENDING_REVIEW
-  ACTIVE
-  SUSPENDED
-  REJECTED
 }
 
 enum QuestionType {
@@ -129,16 +115,13 @@ model User {
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 
-  favorites             Favorite[]
-  brochureRequests      BrochureRequest[]
-  simulations           Simulation[]
-  badges                UserBadge[]
-  resourceViews         ResourceView[]     @relation("ResourceViewedBy")
-  resourceDownloads     ResourceDownload[] @relation("ResourceDownloadedBy")
-  createdQuestions      Question[]         @relation("QuestionCreatedBy")
-  createdResources      Resource[]         @relation("ResourceCreatedBy")
-  ownedEstablishments   Establishment[]    @relation("EstablishmentOwner")
-  reviewedEstablishments Establishment[]   @relation("EstablishmentReviewer")
+  favorites         Favorite[]
+  simulations       Simulation[]
+  badges            UserBadge[]
+  resourceViews     ResourceView[]     @relation("ResourceViewedBy")
+  resourceDownloads ResourceDownload[] @relation("ResourceDownloadedBy")
+  createdQuestions  Question[]         @relation("QuestionCreatedBy")
+  createdResources  Resource[]         @relation("ResourceCreatedBy")
 
   @@map("users")
 }
@@ -148,51 +131,49 @@ model User {
 // ---------------------------------------------------------------------------
 
 model Establishment {
-  id              String            @id @default(cuid())
+  id              String              @id @default(cuid())
   name            String
-  type            EstablishmentType
-  description     String?
+  acronym         String?
   logoUrl         String?
-  photos          String[]          @default([])
-  address         String?
-  city            String?
-  country         String?
-  publicOrPrivate PublicOrPrivate?
-  filieres        String[]          @default([])
-  niveauAdmission String?
-  admissionInfo   String?
-  budgetRange     String?
-  isPartner       Boolean           @default(false)
-  contactEmail    String?
-  contactPhone    String?
-  websiteUrl      String?
+  publicOrPrivate PublicOrPrivate
+  levels          EstablishmentLevel[]
+  description     String?
 
-  plan          EstablishmentPlan   @default(FREE)
-  planExpiresAt DateTime?
-  verified      Boolean             @default(false)
-  status        EstablishmentStatus @default(ACTIVE)
+  province      String?
+  city          String?
+  district      String?
+  address       String?
+  latitude      Float?
+  longitude     Float?
+  googleMapsUrl String?
 
-  ownerUserId      String?
-  owner            User?   @relation("EstablishmentOwner", fields: [ownerUserId], references: [id])
-  responsableNom   String?
-  responsableEmail String?
-  responsablePhone String?
-  justificatifUrls String[] @default([])
+  classesOffered    String[] @default([])
+  filieresSuperieur String[] @default([])
+  diplomasOffered   String[] @default([])
 
-  claimInviteEmail String?
-  claimToken       String?   @unique
-  claimedAt        DateTime?
+  phone              String?
+  whatsapp           String?
+  email              String?
+  secretariatContact String?
+  websiteUrl         String?
 
-  reviewedById    String?
-  reviewedBy      User?     @relation("EstablishmentReviewer", fields: [reviewedById], references: [id])
-  reviewedAt      DateTime?
-  rejectionReason String?
+  facebookUrl  String?
+  instagramUrl String?
+  linkedinUrl  String?
+  tiktokUrl    String?
+
+  schedule            String?
+  registrationPeriod  String?
+  admissionConditions String?
+  tuitionFees         String?
+
+  verified Boolean @default(false)
+  archived Boolean @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  favorites        Favorite[]
-  brochureRequests BrochureRequest[]
+  favorites Favorite[]
 
   @@map("establishments")
 }
@@ -207,20 +188,6 @@ model Favorite {
 
   @@id([userId, establishmentId])
   @@map("favorites")
-}
-
-model BrochureRequest {
-  id              String        @id @default(cuid())
-  userId          String?
-  user            User?         @relation(fields: [userId], references: [id])
-  establishmentId String
-  establishment   Establishment @relation(fields: [establishmentId], references: [id], onDelete: Cascade)
-  name            String
-  email           String
-  whatsapp        String?
-  createdAt       DateTime      @default(now())
-
-  @@map("brochure_requests")
 }
 
 // ---------------------------------------------------------------------------

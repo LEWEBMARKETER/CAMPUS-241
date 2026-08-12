@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 
 type HeaderUser = {
   name?: string | null;
-  role: "SUPER_ADMIN" | "ADMIN" | "EDITOR" | "ETABLISSEMENT" | "UTILISATEUR";
+  role: "SUPER_ADMIN" | "ADMIN" | "EDITOR" | "UTILISATEUR";
 } | null;
 
 const ADMIN_AREA_ROLES = ["SUPER_ADMIN", "ADMIN"];

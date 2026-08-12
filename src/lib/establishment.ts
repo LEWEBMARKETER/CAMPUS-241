@@ -1,28 +1,10 @@
-import type {
-  EstablishmentPlan,
-  EstablishmentStatus,
-  EstablishmentType,
-  PublicOrPrivate,
-} from "@prisma/client";
+import type { EstablishmentLevel, PublicOrPrivate } from "@prisma/client";
 
-export const ESTABLISHMENT_TYPE_LABELS: Record<EstablishmentType, string> = {
-  COLLEGE_LYCEE: "Collège / Lycée",
-  UNIVERSITE: "Université",
-  GRANDE_ECOLE: "Grande école",
-  CENTRE_FORMATION: "Centre de formation",
-};
-
-export const ESTABLISHMENT_STATUS_LABELS: Record<EstablishmentStatus, string> = {
-  PENDING_REVIEW: "En attente de validation",
-  ACTIVE: "Active",
-  SUSPENDED: "Suspendue",
-  REJECTED: "Rejetée",
-};
-
-export const ESTABLISHMENT_PLAN_LABELS: Record<EstablishmentPlan, string> = {
-  FREE: "Gratuit",
-  PRO: "Pro",
-  PREMIUM: "Premium",
+export const ESTABLISHMENT_LEVEL_LABELS: Record<EstablishmentLevel, string> = {
+  PRIMAIRE: "Primaire",
+  COLLEGE: "Collège",
+  LYCEE: "Lycée",
+  SUPERIEUR: "Supérieur",
 };
 
 export const PUBLIC_PRIVATE_LABELS: Record<PublicOrPrivate, string> = {
@@ -30,20 +12,22 @@ export const PUBLIC_PRIVATE_LABELS: Record<PublicOrPrivate, string> = {
   PRIVE: "Privé",
 };
 
-export const FILIERES = [
-  "Sciences",
-  "Commerce & Gestion",
-  "Droit",
-  "Santé",
-  "Informatique",
-  "Ingénierie",
-  "Lettres & Sciences humaines",
-  "Communication",
+export const GABON_PROVINCES = [
+  "Estuaire",
+  "Haut-Ogooué",
+  "Moyen-Ogooué",
+  "Ngounié",
+  "Nyanga",
+  "Ogooué-Ivindo",
+  "Ogooué-Lolo",
+  "Ogooué-Maritime",
+  "Woleu-Ntem",
 ] as const;
 
-export const BUDGET_RANGES = [
-  "Moins de 500 000 FCFA/an",
-  "500 000 - 1 000 000 FCFA/an",
-  "1 000 000 - 2 000 000 FCFA/an",
-  "Plus de 2 000 000 FCFA/an",
-] as const;
+// Classes suggérées par niveau, pour les cases à cocher du formulaire admin
+// et pour garder "classes proposées" structurées (utile pour la recherche).
+export const CLASSES_BY_LEVEL: Record<"PRIMAIRE" | "COLLEGE" | "LYCEE", string[]> = {
+  PRIMAIRE: ["CP", "CE1", "CE2", "CM1", "CM2"],
+  COLLEGE: ["6e", "5e", "4e", "3e"],
+  LYCEE: ["2nde", "1re", "Tle"],
+};

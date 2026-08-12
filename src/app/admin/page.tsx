@@ -15,17 +15,15 @@ export default async function AdminDashboardPage() {
 
   const [
     establishmentsCount,
-    proEstablishmentsCount,
+    verifiedEstablishmentsCount,
     usersCount,
-    brochureRequestsCount,
     questionsCount,
     simulationsCount,
     resourcesCount,
   ] = await Promise.all([
     prisma.establishment.count(),
-    prisma.establishment.count({ where: { plan: { in: ["PRO", "PREMIUM"] } } }),
+    prisma.establishment.count({ where: { verified: true } }),
     prisma.user.count(),
-    prisma.brochureRequest.count(),
     prisma.question.count(),
     prisma.simulation.count(),
     prisma.resource.count(),
@@ -33,9 +31,8 @@ export default async function AdminDashboardPage() {
 
   const stats = [
     { label: "Établissements", value: establishmentsCount },
-    { label: "Dont PRO/PREMIUM", value: proEstablishmentsCount },
+    { label: "Dont vérifiés", value: verifiedEstablishmentsCount },
     { label: "Utilisateurs inscrits", value: usersCount },
-    { label: "Demandes de brochure", value: brochureRequestsCount },
     { label: "Questions BAC", value: questionsCount },
     { label: "Simulations réalisées", value: simulationsCount },
     { label: "Ressources", value: resourcesCount },

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import type { Prisma, EstablishmentType, PublicOrPrivate } from "@prisma/client";
+import type { EstablishmentLevel, Prisma, PublicOrPrivate } from "@prisma/client";
 
 import { AnnuaireFilters } from "@/components/annuaire/annuaire-filters";
 import { EstablishmentCard } from "@/components/establishment-card";
@@ -11,9 +11,8 @@ type SearchParams = {
   q?: string;
   type?: string;
   city?: string;
-  secteur?: string;
+  niveau?: string;
   filiere?: string;
-  budget?: string;
 };
 
 export default async function AnnuairePage({
@@ -23,39 +22,37 @@ export default async function AnnuairePage({
 }) {
   const params = await searchParams;
 
-  const where: Prisma.EstablishmentWhereInput = { status: "ACTIVE" };
+  const where: Prisma.EstablishmentWhereInput = { archived: false };
 
   if (params.q) {
     where.OR = [
       { name: { contains: params.q, mode: "insensitive" } },
       { city: { contains: params.q, mode: "insensitive" } },
+      { filieresSuperieur: { has: params.q } },
     ];
   }
   if (params.type) {
-    where.type = params.type as EstablishmentType;
+    where.publicOrPrivate = params.type as PublicOrPrivate;
   }
   if (params.city) {
     where.city = params.city;
   }
-  if (params.secteur) {
-    where.publicOrPrivate = params.secteur as PublicOrPrivate;
+  if (params.niveau) {
+    where.levels = { has: params.niveau as EstablishmentLevel };
   }
   if (params.filiere) {
-    where.filieres = { has: params.filiere };
-  }
-  if (params.budget) {
-    where.budgetRange = params.budget;
+    where.filieresSuperieur = { has: params.filiere };
   }
 
   const [establishments, cityRows] = await Promise.all([
     prisma.establishment.findMany({
       where,
-      orderBy: [{ isPartner: "desc" }, { name: "asc" }],
+      orderBy: [{ verified: "desc" }, { name: "asc" }],
     }),
     prisma.establishment.findMany({
       distinct: ["city"],
       select: { city: true },
-      where: { city: { not: null }, status: "ACTIVE" },
+      where: { city: { not: null }, archived: false },
       orderBy: { city: "asc" },
     }),
   ]);
@@ -70,7 +67,7 @@ export default async function AnnuairePage({
         Annuaire des établissements
       </h1>
       <p className="mt-2 max-w-2xl text-neutral-600">
-        Collèges, lycées, universités, grandes écoles et centres de formation
+        Écoles primaires, collèges, lycées, universités et centres de formation, publics et privés,
         au Gabon.
       </p>
 
@@ -95,9 +92,11 @@ export default async function AnnuairePage({
               key={establishment.id}
               id={establishment.id}
               name={establishment.name}
-              type={establishment.type}
+              logoUrl={establishment.logoUrl}
+              publicOrPrivate={establishment.publicOrPrivate}
+              levels={establishment.levels}
               city={establishment.city}
-              isPartner={establishment.isPartner}
+              verified={establishment.verified}
               description={establishment.description}
             />
           ))}

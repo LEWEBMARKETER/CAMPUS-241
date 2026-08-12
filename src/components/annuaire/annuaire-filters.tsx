@@ -4,12 +4,7 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import {
-  BUDGET_RANGES,
-  ESTABLISHMENT_TYPE_LABELS,
-  FILIERES,
-  PUBLIC_PRIVATE_LABELS,
-} from "@/lib/establishment";
+import { ESTABLISHMENT_LEVEL_LABELS, PUBLIC_PRIVATE_LABELS } from "@/lib/establishment";
 
 export function AnnuaireFilters({ cities }: { cities: string[] }) {
   const router = useRouter();
@@ -41,7 +36,7 @@ export function AnnuaireFilters({ cities }: { cities: string[] }) {
           type="search"
           value={q}
           onChange={(event) => setQ(event.target.value)}
-          placeholder="Nom d'établissement..."
+          placeholder="Nom, filière, ville…"
           className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm outline-none focus:border-brand-blue"
         />
         <Button type="submit" size="sm">
@@ -49,14 +44,27 @@ export function AnnuaireFilters({ cities }: { cities: string[] }) {
         </Button>
       </form>
 
-      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <select
+          className="rounded-lg border border-black/10 px-3 py-2 text-sm text-neutral-700"
+          value={searchParams.get("niveau") ?? ""}
+          onChange={(event) => updateParam("niveau", event.target.value)}
+        >
+          <option value="">Tous les niveaux</option>
+          {Object.entries(ESTABLISHMENT_LEVEL_LABELS).map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
+
         <select
           className="rounded-lg border border-black/10 px-3 py-2 text-sm text-neutral-700"
           value={searchParams.get("type") ?? ""}
           onChange={(event) => updateParam("type", event.target.value)}
         >
-          <option value="">Tous les types</option>
-          {Object.entries(ESTABLISHMENT_TYPE_LABELS).map(([value, label]) => (
+          <option value="">Public / Privé</option>
+          {Object.entries(PUBLIC_PRIVATE_LABELS).map(([value, label]) => (
             <option key={value} value={value}>
               {label}
             </option>
@@ -76,44 +84,13 @@ export function AnnuaireFilters({ cities }: { cities: string[] }) {
           ))}
         </select>
 
-        <select
+        <input
+          type="text"
+          placeholder="Filière (ex. informatique)"
+          defaultValue={searchParams.get("filiere") ?? ""}
+          onBlur={(event) => updateParam("filiere", event.target.value.trim())}
           className="rounded-lg border border-black/10 px-3 py-2 text-sm text-neutral-700"
-          value={searchParams.get("secteur") ?? ""}
-          onChange={(event) => updateParam("secteur", event.target.value)}
-        >
-          <option value="">Public / Privé</option>
-          {Object.entries(PUBLIC_PRIVATE_LABELS).map(([value, label]) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </select>
-
-        <select
-          className="rounded-lg border border-black/10 px-3 py-2 text-sm text-neutral-700"
-          value={searchParams.get("filiere") ?? ""}
-          onChange={(event) => updateParam("filiere", event.target.value)}
-        >
-          <option value="">Toutes les filières</option>
-          {FILIERES.map((filiere) => (
-            <option key={filiere} value={filiere}>
-              {filiere}
-            </option>
-          ))}
-        </select>
-
-        <select
-          className="rounded-lg border border-black/10 px-3 py-2 text-sm text-neutral-700"
-          value={searchParams.get("budget") ?? ""}
-          onChange={(event) => updateParam("budget", event.target.value)}
-        >
-          <option value="">Tous les budgets</option>
-          {BUDGET_RANGES.map((budget) => (
-            <option key={budget} value={budget}>
-              {budget}
-            </option>
-          ))}
-        </select>
+        />
       </div>
 
       {hasActiveFilters && (
