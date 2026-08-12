@@ -42,7 +42,7 @@ const pillars = [
 
 export default async function Home() {
   const featuredEstablishments = await prisma.establishment.findMany({
-    where: { isPartner: true },
+    where: { verified: true, archived: false },
     orderBy: { name: "asc" },
     take: 3,
   });
@@ -114,7 +114,7 @@ export default async function Home() {
           <div className="flex items-end justify-between">
             <div>
               <h2 className="text-2xl font-bold text-neutral-900">
-                Établissements partenaires
+                Établissements vérifiés
               </h2>
               <p className="mt-1 text-neutral-600">
                 Un aperçu de l&apos;annuaire CAMPUS 241.
@@ -133,9 +133,11 @@ export default async function Home() {
                 key={establishment.id}
                 id={establishment.id}
                 name={establishment.name}
-                type={establishment.type}
+                logoUrl={establishment.logoUrl}
+                publicOrPrivate={establishment.publicOrPrivate}
+                levels={establishment.levels}
                 city={establishment.city}
-                isPartner={establishment.isPartner}
+                verified={establishment.verified}
                 description={establishment.description}
               />
             ))}

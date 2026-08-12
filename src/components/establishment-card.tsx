@@ -1,31 +1,29 @@
 import Link from "next/link";
-import { GraduationCap } from "lucide-react";
+import { BadgeCheck, GraduationCap, MapPin } from "lucide-react";
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
-import { ESTABLISHMENT_TYPE_LABELS } from "@/lib/establishment";
-import type { EstablishmentType } from "@prisma/client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ESTABLISHMENT_LEVEL_LABELS, PUBLIC_PRIVATE_LABELS } from "@/lib/establishment";
+import type { EstablishmentLevel, PublicOrPrivate } from "@prisma/client";
 
 export type EstablishmentCardProps = {
   id: string;
   name: string;
-  type: EstablishmentType;
+  logoUrl?: string | null;
+  publicOrPrivate: PublicOrPrivate;
+  levels: EstablishmentLevel[];
   city: string | null;
-  isPartner: boolean;
+  verified: boolean;
   description?: string | null;
 };
 
 export function EstablishmentCard({
   id,
   name,
-  type,
+  logoUrl,
+  publicOrPrivate,
+  levels,
   city,
-  isPartner,
+  verified,
   description,
 }: EstablishmentCardProps) {
   return (
@@ -33,28 +31,37 @@ export function EstablishmentCard({
       <Card className="h-full">
         <CardHeader className="flex-row items-start justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-brand-blue-light text-brand-blue">
-              <GraduationCap className="size-5" />
+            <div className="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-brand-blue-light text-brand-blue">
+              {logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element -- logos hébergés sur des domaines arbitraires (URL collée par l'admin)
+                <img src={logoUrl} alt="" className="size-11 object-cover" />
+              ) : (
+                <GraduationCap className="size-5" />
+              )}
             </div>
             <div>
-              <CardTitle>{name}</CardTitle>
-              <CardDescription>
-                {ESTABLISHMENT_TYPE_LABELS[type]}
-                {city ? ` · ${city}` : ""}
-              </CardDescription>
+              <div className="flex items-center gap-1.5">
+                <CardTitle>{name}</CardTitle>
+                {verified && <BadgeCheck className="size-4 shrink-0 text-brand-green" />}
+              </div>
+              <p className="mt-0.5 text-sm text-neutral-500">
+                {PUBLIC_PRIVATE_LABELS[publicOrPrivate]}
+                {levels.length > 0
+                  ? ` · ${levels.map((level) => ESTABLISHMENT_LEVEL_LABELS[level]).join(", ")}`
+                  : ""}
+              </p>
+              {city && (
+                <p className="mt-0.5 flex items-center gap-1 text-sm text-neutral-500">
+                  <MapPin className="size-3.5" />
+                  {city}
+                </p>
+              )}
             </div>
           </div>
-          {isPartner && (
-            <span className="whitespace-nowrap rounded-full bg-brand-green-light px-2.5 py-1 text-xs font-medium text-brand-green-dark">
-              Partenaire
-            </span>
-          )}
         </CardHeader>
         {description && (
           <CardContent>
-            <p className="line-clamp-2 text-sm text-neutral-500">
-              {description}
-            </p>
+            <p className="line-clamp-2 text-sm text-neutral-500">{description}</p>
           </CardContent>
         )}
       </Card>

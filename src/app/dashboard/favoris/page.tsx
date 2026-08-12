@@ -4,7 +4,7 @@ import { Heart } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ESTABLISHMENT_TYPE_LABELS } from "@/lib/establishment";
+import { ESTABLISHMENT_LEVEL_LABELS, PUBLIC_PRIVATE_LABELS } from "@/lib/establishment";
 import { toggleFavorite } from "@/lib/actions/favorites";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/session";
@@ -44,7 +44,10 @@ export default async function FavorisPage() {
               </Link>
             </CardTitle>
             <CardDescription>
-              {ESTABLISHMENT_TYPE_LABELS[establishment.type]}
+              {PUBLIC_PRIVATE_LABELS[establishment.publicOrPrivate]}
+              {establishment.levels.length > 0
+                ? ` · ${establishment.levels.map((level) => ESTABLISHMENT_LEVEL_LABELS[level]).join(", ")}`
+                : ""}
               {establishment.city ? ` · ${establishment.city}` : ""}
             </CardDescription>
           </CardHeader>
