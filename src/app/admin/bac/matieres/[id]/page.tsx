@@ -32,6 +32,7 @@ export default async function EditSubjectPage({
         <SubjectForm
           subject={subject}
           selectedSeriesIds={subject.series.map((s) => s.seriesId)}
+          coefficients={Object.fromEntries(subject.series.map((s) => [s.seriesId, s.coefficient]))}
           allSeries={allSeries}
           action={updateSubject.bind(null, id)}
           error={error}

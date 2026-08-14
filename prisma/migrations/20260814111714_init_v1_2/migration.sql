@@ -1,5 +1,5 @@
 -- CreateEnum
-CREATE TYPE "UserRole" AS ENUM ('SUPER_ADMIN', 'ADMIN', 'EDITOR', 'UTILISATEUR');
+CREATE TYPE "UserRole" AS ENUM ('SUPER_ADMIN', 'ADMIN', 'EDITOR', 'VALIDATEUR_PEDAGOGIQUE', 'UTILISATEUR');
 
 -- CreateEnum
 CREATE TYPE "EstablishmentLevel" AS ENUM ('PRIMAIRE', 'COLLEGE', 'LYCEE', 'SUPERIEUR');
@@ -11,7 +11,19 @@ CREATE TYPE "PublicOrPrivate" AS ENUM ('PUBLIC', 'PRIVE');
 CREATE TYPE "QuestionType" AS ENUM ('QCM', 'QCM_MULTIPLE', 'VRAI_FAUX', 'REPONSE_COURTE');
 
 -- CreateEnum
-CREATE TYPE "QuestionDifficulty" AS ENUM ('FACILE', 'MOYEN', 'DIFFICILE');
+CREATE TYPE "QuestionDifficulty" AS ENUM ('NIVEAU_1_FONDAMENTAL', 'NIVEAU_2_APPLICATION', 'NIVEAU_3_RAISONNEMENT', 'NIVEAU_4_AVANCE', 'NIVEAU_5_EXAMEN');
+
+-- CreateEnum
+CREATE TYPE "QuestionFrequencyTier" AS ENUM ('TRES_FREQUENTE', 'FREQUENTE', 'OCCASIONNELLE', 'RARE');
+
+-- CreateEnum
+CREATE TYPE "QuestionSourceStatus" AS ENUM ('OFFICIEL', 'VERIFIE', 'SECONDAIRE');
+
+-- CreateEnum
+CREATE TYPE "QuestionValidationStatus" AS ENUM ('BROUILLON', 'EN_ATTENTE_VALIDATION', 'VALIDEE', 'REJETEE', 'A_CORRIGER');
+
+-- CreateEnum
+CREATE TYPE "BacStatisticStatus" AS ENUM ('OFFICIEL', 'NON_DISPONIBLE');
 
 -- CreateEnum
 CREATE TYPE "SimulationMode" AS ENUM ('ENTRAINEMENT', 'EXAMEN');
@@ -135,6 +147,7 @@ CREATE TABLE "bac_series_subjects" (
     "seriesId" TEXT NOT NULL,
     "subjectId" TEXT NOT NULL,
     "order" INTEGER NOT NULL DEFAULT 0,
+    "coefficient" DOUBLE PRECISION,
 
     CONSTRAINT "bac_series_subjects_pkey" PRIMARY KEY ("seriesId","subjectId")
 );
@@ -158,14 +171,26 @@ CREATE TABLE "bac_questions" (
     "seriesId" TEXT NOT NULL,
     "subjectId" TEXT NOT NULL,
     "chapterId" TEXT NOT NULL,
+    "subChapter" TEXT,
+    "notion" TEXT,
+    "competency" TEXT,
     "type" "QuestionType" NOT NULL DEFAULT 'QCM',
-    "difficulty" "QuestionDifficulty" NOT NULL DEFAULT 'MOYEN',
+    "difficulty" "QuestionDifficulty" NOT NULL DEFAULT 'NIVEAU_2_APPLICATION',
+    "frequencyTier" "QuestionFrequencyTier",
     "prompt" TEXT NOT NULL,
     "explanation" TEXT,
+    "method" TEXT,
+    "commonMistake" TEXT,
+    "estimatedTimeSeconds" INTEGER,
     "source" TEXT,
+    "sourceStatus" "QuestionSourceStatus" NOT NULL DEFAULT 'SECONDAIRE',
     "examYear" INTEGER,
     "correctAnswerText" TEXT,
     "published" BOOLEAN NOT NULL DEFAULT false,
+    "validationStatus" "QuestionValidationStatus" NOT NULL DEFAULT 'BROUILLON',
+    "validatedById" TEXT,
+    "validatedAt" TIMESTAMP(3),
+    "rejectionNote" TEXT,
     "createdById" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -242,6 +267,45 @@ CREATE TABLE "bac_user_badges" (
     "earnedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "bac_user_badges_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "bac_statistics" (
+    "id" TEXT NOT NULL,
+    "year" INTEGER NOT NULL,
+    "seriesId" TEXT,
+    "province" TEXT,
+    "candidatesCount" INTEGER,
+    "maleCandidates" INTEGER,
+    "femaleCandidates" INTEGER,
+    "admissibleCount" INTEGER,
+    "admittedCount" INTEGER,
+    "postponedCount" INTEGER,
+    "passRate" DOUBLE PRECISION,
+    "status" "BacStatisticStatus" NOT NULL DEFAULT 'NON_DISPONIBLE',
+    "source" TEXT,
+    "notes" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "bac_statistics_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "question_bank_settings" (
+    "id" TEXT NOT NULL DEFAULT 'singleton',
+    "weightTresFrequente" DOUBLE PRECISION NOT NULL DEFAULT 40,
+    "weightFrequente" DOUBLE PRECISION NOT NULL DEFAULT 30,
+    "weightOccasionnelle" DOUBLE PRECISION NOT NULL DEFAULT 20,
+    "weightRare" DOUBLE PRECISION NOT NULL DEFAULT 10,
+    "masteryThreshold1" INTEGER NOT NULL DEFAULT 40,
+    "masteryThreshold2" INTEGER NOT NULL DEFAULT 60,
+    "masteryThreshold3" INTEGER NOT NULL DEFAULT 70,
+    "masteryThreshold4" INTEGER NOT NULL DEFAULT 80,
+    "masteryThreshold5" INTEGER NOT NULL DEFAULT 90,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "question_bank_settings_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -339,6 +403,9 @@ CREATE INDEX "bac_questions_seriesId_subjectId_chapterId_idx" ON "bac_questions"
 CREATE INDEX "bac_questions_published_idx" ON "bac_questions"("published");
 
 -- CreateIndex
+CREATE INDEX "bac_questions_validationStatus_idx" ON "bac_questions"("validationStatus");
+
+-- CreateIndex
 CREATE INDEX "bac_simulations_userId_createdAt_idx" ON "bac_simulations"("userId", "createdAt");
 
 -- CreateIndex
@@ -402,6 +469,9 @@ ALTER TABLE "bac_questions" ADD CONSTRAINT "bac_questions_subjectId_fkey" FOREIG
 ALTER TABLE "bac_questions" ADD CONSTRAINT "bac_questions_chapterId_fkey" FOREIGN KEY ("chapterId") REFERENCES "bac_chapters"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "bac_questions" ADD CONSTRAINT "bac_questions_validatedById_fkey" FOREIGN KEY ("validatedById") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "bac_questions" ADD CONSTRAINT "bac_questions_createdById_fkey" FOREIGN KEY ("createdById") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -427,6 +497,9 @@ ALTER TABLE "bac_user_badges" ADD CONSTRAINT "bac_user_badges_userId_fkey" FOREI
 
 -- AddForeignKey
 ALTER TABLE "bac_user_badges" ADD CONSTRAINT "bac_user_badges_badgeId_fkey" FOREIGN KEY ("badgeId") REFERENCES "bac_badges"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "bac_statistics" ADD CONSTRAINT "bac_statistics_seriesId_fkey" FOREIGN KEY ("seriesId") REFERENCES "bac_series"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "resource_categories" ADD CONSTRAINT "resource_categories_parentId_fkey" FOREIGN KEY ("parentId") REFERENCES "resource_categories"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

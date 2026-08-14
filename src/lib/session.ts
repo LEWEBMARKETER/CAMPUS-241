@@ -24,5 +24,9 @@ export async function requireAdmin() {
 }
 
 export async function requireEditor() {
-  return requireRole(["SUPER_ADMIN", "ADMIN", "EDITOR"]);
+  return requireRole(["SUPER_ADMIN", "ADMIN", "EDITOR", "VALIDATEUR_PEDAGOGIQUE"]);
+}
+
+export async function requireValidator() {
+  return requireRole(["SUPER_ADMIN", "ADMIN", "VALIDATEUR_PEDAGOGIQUE"]);
 }

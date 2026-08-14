@@ -17,29 +17,54 @@ const questionSchema = z.object({
   seriesId: z.string().trim().min(1, "Série requise."),
   subjectId: z.string().trim().min(1, "Matière requise."),
   chapterId: z.string().trim().min(1, "Chapitre requis."),
+  subChapter: z.string().trim().optional(),
+  notion: z.string().trim().optional(),
+  competency: z.string().trim().optional(),
   type: z.enum(["QCM", "QCM_MULTIPLE", "VRAI_FAUX", "REPONSE_COURTE"]),
-  difficulty: z.enum(["FACILE", "MOYEN", "DIFFICILE"]),
+  difficulty: z.enum([
+    "NIVEAU_1_FONDAMENTAL",
+    "NIVEAU_2_APPLICATION",
+    "NIVEAU_3_RAISONNEMENT",
+    "NIVEAU_4_AVANCE",
+    "NIVEAU_5_EXAMEN",
+  ]),
+  frequencyTier: z.enum(["TRES_FREQUENTE", "FREQUENTE", "OCCASIONNELLE", "RARE", ""]).optional(),
   prompt: z.string().trim().min(5, "Énoncé trop court."),
   explanation: z.string().trim().optional(),
+  method: z.string().trim().optional(),
+  commonMistake: z.string().trim().optional(),
+  estimatedTimeSeconds: z.string().trim().optional(),
   source: z.string().trim().optional(),
+  sourceStatus: z.enum(["OFFICIEL", "VERIFIE", "SECONDAIRE"]),
   examYear: z.string().optional(),
   correctAnswerText: z.string().trim().optional(),
   choicesJson: z.string().optional(),
-  published: z.string().optional(),
 });
 
 type QuestionInput = {
   seriesId: string;
   subjectId: string;
   chapterId: string;
+  subChapter: string | null;
+  notion: string | null;
+  competency: string | null;
   type: "QCM" | "QCM_MULTIPLE" | "VRAI_FAUX" | "REPONSE_COURTE";
-  difficulty: "FACILE" | "MOYEN" | "DIFFICILE";
+  difficulty:
+    | "NIVEAU_1_FONDAMENTAL"
+    | "NIVEAU_2_APPLICATION"
+    | "NIVEAU_3_RAISONNEMENT"
+    | "NIVEAU_4_AVANCE"
+    | "NIVEAU_5_EXAMEN";
+  frequencyTier: "TRES_FREQUENTE" | "FREQUENTE" | "OCCASIONNELLE" | "RARE" | null;
   prompt: string;
   explanation: string | null;
+  method: string | null;
+  commonMistake: string | null;
+  estimatedTimeSeconds: number | null;
   source: string | null;
+  sourceStatus: "OFFICIEL" | "VERIFIE" | "SECONDAIRE";
   examYear: number | null;
   correctAnswerText: string | null;
-  published: boolean;
   choices: { label: string; isCorrect: boolean; order: number }[];
 };
 
@@ -74,14 +99,21 @@ function parseQuestionForm(formData: FormData): { error: string } | { data: Ques
       seriesId: data.seriesId,
       subjectId: data.subjectId,
       chapterId: data.chapterId,
+      subChapter: data.subChapter || null,
+      notion: data.notion || null,
+      competency: data.competency || null,
       type: data.type,
       difficulty: data.difficulty,
+      frequencyTier: data.frequencyTier || null,
       prompt: data.prompt,
       explanation: data.explanation || null,
+      method: data.method || null,
+      commonMistake: data.commonMistake || null,
+      estimatedTimeSeconds: data.estimatedTimeSeconds ? Number(data.estimatedTimeSeconds) : null,
       source: data.source || null,
+      sourceStatus: data.sourceStatus,
       examYear: data.examYear ? Number(data.examYear) : null,
       correctAnswerText: isChoiceBased ? null : data.correctAnswerText || null,
-      published: data.published === "on",
       choices,
     },
   };
@@ -120,6 +152,9 @@ export async function updateQuestion(id: string, formData: FormData) {
       where: { id },
       data: {
         ...data,
+        // Toute modification repart en brouillon : re-validation obligatoire.
+        validationStatus: "BROUILLON",
+        published: false,
         choices: { create: choices },
       },
     }),
@@ -136,6 +171,21 @@ export async function deleteQuestion(id: string) {
 
 export async function togglePublished(id: string, current: boolean) {
   await requireEditor();
+
+  if (!current) {
+    const question = await prisma.question.findUnique({
+      where: { id },
+      select: { validationStatus: true },
+    });
+    if (question?.validationStatus !== "VALIDEE") {
+      redirect(
+        `/admin/bac/questions?error=${encodeURIComponent(
+          "Cette question doit d'abord être validée par un validateur pédagogique.",
+        )}`,
+      );
+    }
+  }
+
   await prisma.question.update({ where: { id }, data: { published: !current } });
   revalidatePath("/admin/bac/questions");
 }

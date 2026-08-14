@@ -12,7 +12,7 @@ type SubjectInput = {
   slug: string;
   order: number;
   isActive: boolean;
-  seriesIds: string[];
+  seriesCoefficients: { seriesId: string; coefficient: number | null }[];
 };
 
 const subjectSchema = z.object({
@@ -32,13 +32,21 @@ function parseSubjectForm(formData: FormData): { error: string } | { data: Subje
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Formulaire invalide." };
   }
+
+  const seriesIds = formData.getAll("seriesIds").map(String);
+  const seriesCoefficients = seriesIds.map((seriesId) => {
+    const raw = formData.get(`coefficient_${seriesId}`)?.toString().trim();
+    const coefficient = raw ? Number(raw) : null;
+    return { seriesId, coefficient: coefficient && !Number.isNaN(coefficient) ? coefficient : null };
+  });
+
   return {
     data: {
       name: parsed.data.name,
       slug: parsed.data.slug,
       order: parsed.data.order,
       isActive: parsed.data.isActive === "on",
-      seriesIds: formData.getAll("seriesIds").map(String),
+      seriesCoefficients,
     },
   };
 }
@@ -50,11 +58,13 @@ export async function createSubject(formData: FormData) {
     redirect(`/admin/bac/matieres/nouveau?error=${encodeURIComponent(result.error)}`);
   }
 
-  const { seriesIds, ...data } = result.data;
+  const { seriesCoefficients, ...data } = result.data;
   await prisma.subject.create({
     data: {
       ...data,
-      series: { create: seriesIds.map((seriesId) => ({ seriesId })) },
+      series: {
+        create: seriesCoefficients.map(({ seriesId, coefficient }) => ({ seriesId, coefficient })),
+      },
     },
   });
   revalidatePath("/admin/bac/matieres");
@@ -68,12 +78,16 @@ export async function updateSubject(id: string, formData: FormData) {
     redirect(`/admin/bac/matieres/${id}?error=${encodeURIComponent(result.error)}`);
   }
 
-  const { seriesIds, ...data } = result.data;
+  const { seriesCoefficients, ...data } = result.data;
   await prisma.$transaction([
     prisma.subject.update({ where: { id }, data }),
     prisma.seriesSubject.deleteMany({ where: { subjectId: id } }),
     prisma.seriesSubject.createMany({
-      data: seriesIds.map((seriesId) => ({ subjectId: id, seriesId })),
+      data: seriesCoefficients.map(({ seriesId, coefficient }) => ({
+        subjectId: id,
+        seriesId,
+        coefficient,
+      })),
     }),
   ]);
   revalidatePath("/admin/bac/matieres");

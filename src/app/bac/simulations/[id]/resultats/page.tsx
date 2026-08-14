@@ -5,9 +5,15 @@ import { CheckCircle2, Clock, TrendingUp, XCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getQuestionBankSettings } from "@/lib/actions/admin-bac-settings";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/session";
-import { computeChapterBreakdown, computeProgression } from "@/lib/scoring";
+import {
+  computeChapterBreakdown,
+  computeMasteryLevel,
+  computeNotionBreakdown,
+  computeProgression,
+} from "@/lib/scoring";
 
 export const metadata: Metadata = { title: "Résultats de la simulation" };
 
@@ -72,8 +78,30 @@ export default async function SimulationResultsPage({
   const strongChapters = breakdown.filter((b) => b.percentage >= 60);
   const weakChapters = breakdown.filter((b) => b.percentage < 60);
 
+  const notionBreakdown = computeNotionBreakdown(
+    simulation.answers.map((a) => ({
+      notion: a.question.notion,
+      isCorrect: a.isCorrect ?? false,
+    })),
+  );
+  const weakNotions = notionBreakdown.filter((n) => n.percentage < 60);
+
   const total = simulation.answers.length;
   const scoreOn20 = simulation.score !== null ? Math.round((simulation.score / 100) * 20 * 10) / 10 : 0;
+  const settings = await getQuestionBankSettings();
+  const masteryLevel = computeMasteryLevel(simulation.score ?? 0, settings);
+
+  const recommendedResources =
+    weakChapters.length > 0
+      ? await prisma.resource.findMany({
+          where: {
+            status: "PUBLIE",
+            subject: { name: { equals: simulation.subject.name, mode: "insensitive" } },
+          },
+          take: 3,
+          orderBy: { viewCount: "desc" },
+        })
+      : [];
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
@@ -81,9 +109,14 @@ export default async function SimulationResultsPage({
         {simulation.series.code} · {simulation.subject.name} ·{" "}
         {simulation.mode === "EXAMEN" ? "Mode examen" : "Mode entraînement"}
       </p>
-      <h1 className="mt-1 text-3xl font-bold text-neutral-900">
-        {scoreOn20}/20 — {Math.round(simulation.score ?? 0)}%
-      </h1>
+      <div className="mt-1 flex flex-wrap items-center gap-3">
+        <h1 className="text-3xl font-bold text-neutral-900">
+          {scoreOn20}/20 — {Math.round(simulation.score ?? 0)}%
+        </h1>
+        <span className="rounded-full bg-brand-blue-light px-3 py-1 text-sm font-medium text-brand-blue">
+          {masteryLevel}
+        </span>
+      </div>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-4">
         <Card>
@@ -159,6 +192,51 @@ export default async function SimulationResultsPage({
           </CardContent>
         </Card>
       </div>
+
+      {(weakChapters.length > 0 || weakNotions.length > 0) && (
+        <Card className="mt-8">
+          <CardHeader>
+            <CardTitle className="text-base">Recommandation</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-3 text-sm text-neutral-700">
+            <p>
+              Tu dois réviser{" "}
+              <span className="font-medium">
+                {weakChapters.map((c) => c.chapterName).join(", ")}
+              </span>
+              {weakNotions.length > 0 && (
+                <>
+                  {" "}
+                  — en particulier :{" "}
+                  <span className="font-medium">
+                    {weakNotions.map((n) => n.notion).join(", ")}
+                  </span>
+                </>
+              )}
+              .
+            </p>
+            {recommendedResources.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+                  Ressources recommandées
+                </p>
+                <ul className="mt-1 flex flex-col gap-1">
+                  {recommendedResources.map((resource) => (
+                    <li key={resource.id}>
+                      <Link
+                        href={`/ressources/${resource.slug}`}
+                        className="font-medium text-brand-blue hover:underline"
+                      >
+                        {resource.title}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       <div className="mt-8 flex flex-wrap gap-3">
         <Button asChild>

@@ -9,12 +9,14 @@ const labelClass = "mb-1 block text-sm font-medium text-neutral-700";
 export function SubjectForm({
   subject,
   selectedSeriesIds = [],
+  coefficients = {},
   allSeries,
   action,
   error,
 }: {
   subject?: Subject;
   selectedSeriesIds?: string[];
+  coefficients?: Record<string, number | null>;
   allSeries: Series[];
   action: (formData: FormData) => void;
   error?: string;
@@ -59,18 +61,29 @@ export function SubjectForm({
       </div>
 
       <div>
-        <label className={labelClass}>Séries concernées</label>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+        <label className={labelClass}>Séries concernées et coefficient</label>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {allSeries.map((series) => (
-            <label key={series.id} className="flex items-center gap-2 text-sm text-neutral-700">
+            <div key={series.id} className="flex items-center gap-2">
+              <label className="flex flex-1 items-center gap-2 text-sm text-neutral-700">
+                <input
+                  type="checkbox"
+                  name="seriesIds"
+                  value={series.id}
+                  defaultChecked={selectedSeriesIds.includes(series.id)}
+                />
+                {series.code}
+              </label>
               <input
-                type="checkbox"
-                name="seriesIds"
-                value={series.id}
-                defaultChecked={selectedSeriesIds.includes(series.id)}
+                type="number"
+                step="0.5"
+                min="0"
+                name={`coefficient_${series.id}`}
+                placeholder="Coeff."
+                defaultValue={coefficients[series.id] ?? ""}
+                className="w-20 rounded-lg border border-black/10 px-2 py-1 text-sm outline-none focus:border-brand-blue"
               />
-              {series.code}
-            </label>
+            </div>
           ))}
         </div>
       </div>

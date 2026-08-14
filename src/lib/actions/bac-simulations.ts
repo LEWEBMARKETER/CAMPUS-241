@@ -7,16 +7,9 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/session";
 import { checkAndAwardBadges } from "@/lib/bac-badges";
+import { getQuestionBankSettings } from "@/lib/actions/admin-bac-settings";
 import { computeSimulationScore, isAnswerCorrect, type AnswerInput } from "@/lib/scoring";
-
-function shuffle<T>(items: T[]): T[] {
-  const array = [...items];
-  for (let i = array.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [array[i], array[j]] = [array[j], array[i]];
-  }
-  return array;
-}
+import { pickWeightedQuestions } from "@/lib/simulation-weighting";
 
 const setupSchema = z.object({
   seriesId: z.string().trim().min(1, "Série requise."),
@@ -48,7 +41,7 @@ export async function createSimulation(formData: FormData) {
       published: true,
       ...(chapterIds.length > 0 ? { chapterId: { in: chapterIds } } : {}),
     },
-    select: { id: true },
+    select: { id: true, frequencyTier: true },
   });
 
   if (eligibleQuestions.length === 0) {
@@ -59,7 +52,17 @@ export async function createSimulation(formData: FormData) {
     );
   }
 
-  const selected = shuffle(eligibleQuestions).slice(0, requestedQuestionCount);
+  const settings = await getQuestionBankSettings();
+  const selected = pickWeightedQuestions(
+    eligibleQuestions,
+    {
+      TRES_FREQUENTE: settings.weightTresFrequente,
+      FREQUENTE: settings.weightFrequente,
+      OCCASIONNELLE: settings.weightOccasionnelle,
+      RARE: settings.weightRare,
+    },
+    requestedQuestionCount,
+  );
 
   const simulation = await prisma.simulation.create({
     data: {
