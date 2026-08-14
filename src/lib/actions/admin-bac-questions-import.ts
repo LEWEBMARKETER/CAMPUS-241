@@ -36,10 +36,28 @@ const TYPE_ALIASES: Record<string, "QCM" | "QCM_MULTIPLE" | "VRAI_FAUX" | "REPON
   "reponse courte": "REPONSE_COURTE",
 };
 
-const DIFFICULTY_ALIASES: Record<string, "FACILE" | "MOYEN" | "DIFFICILE"> = {
-  facile: "FACILE",
-  moyen: "MOYEN",
-  difficile: "DIFFICILE",
+type DifficultyValue =
+  | "NIVEAU_1_FONDAMENTAL"
+  | "NIVEAU_2_APPLICATION"
+  | "NIVEAU_3_RAISONNEMENT"
+  | "NIVEAU_4_AVANCE"
+  | "NIVEAU_5_EXAMEN";
+
+const DIFFICULTY_ALIASES: Record<string, DifficultyValue> = {
+  facile: "NIVEAU_1_FONDAMENTAL",
+  fondamental: "NIVEAU_1_FONDAMENTAL",
+  "1": "NIVEAU_1_FONDAMENTAL",
+  moyen: "NIVEAU_2_APPLICATION",
+  application: "NIVEAU_2_APPLICATION",
+  "2": "NIVEAU_2_APPLICATION",
+  raisonnement: "NIVEAU_3_RAISONNEMENT",
+  "3": "NIVEAU_3_RAISONNEMENT",
+  difficile: "NIVEAU_4_AVANCE",
+  avance: "NIVEAU_4_AVANCE",
+  "avancé": "NIVEAU_4_AVANCE",
+  "4": "NIVEAU_4_AVANCE",
+  examen: "NIVEAU_5_EXAMEN",
+  "5": "NIVEAU_5_EXAMEN",
 };
 
 function normalize(value: string) {
@@ -143,7 +161,9 @@ export async function importQuestionsFromCsv(
       continue;
     }
 
-    const difficulty = row.Difficulte ? DIFFICULTY_ALIASES[normalize(row.Difficulte)] : "MOYEN";
+    const difficulty = row.Difficulte
+      ? DIFFICULTY_ALIASES[normalize(row.Difficulte)]
+      : "NIVEAU_2_APPLICATION";
     if (!difficulty) {
       skipped.push({ row: rowNumber, reason: `Difficulté inconnue : "${row.Difficulte}".` });
       continue;

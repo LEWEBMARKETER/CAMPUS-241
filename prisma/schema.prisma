@@ -14,6 +14,7 @@ enum UserRole {
   SUPER_ADMIN
   ADMIN
   EDITOR
+  VALIDATEUR_PEDAGOGIQUE
   UTILISATEUR
 }
 
@@ -37,9 +38,37 @@ enum QuestionType {
 }
 
 enum QuestionDifficulty {
-  FACILE
-  MOYEN
-  DIFFICILE
+  NIVEAU_1_FONDAMENTAL
+  NIVEAU_2_APPLICATION
+  NIVEAU_3_RAISONNEMENT
+  NIVEAU_4_AVANCE
+  NIVEAU_5_EXAMEN
+}
+
+enum QuestionFrequencyTier {
+  TRES_FREQUENTE
+  FREQUENTE
+  OCCASIONNELLE
+  RARE
+}
+
+enum QuestionSourceStatus {
+  OFFICIEL
+  VERIFIE
+  SECONDAIRE
+}
+
+enum QuestionValidationStatus {
+  BROUILLON
+  EN_ATTENTE_VALIDATION
+  VALIDEE
+  REJETEE
+  A_CORRIGER
+}
+
+enum BacStatisticStatus {
+  OFFICIEL
+  NON_DISPONIBLE
 }
 
 enum SimulationMode {
@@ -115,13 +144,14 @@ model User {
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 
-  favorites         Favorite[]
-  simulations       Simulation[]
-  badges            UserBadge[]
-  resourceViews     ResourceView[]     @relation("ResourceViewedBy")
-  resourceDownloads ResourceDownload[] @relation("ResourceDownloadedBy")
-  createdQuestions  Question[]         @relation("QuestionCreatedBy")
-  createdResources  Resource[]         @relation("ResourceCreatedBy")
+  favorites          Favorite[]
+  simulations        Simulation[]
+  badges             UserBadge[]
+  resourceViews      ResourceView[]     @relation("ResourceViewedBy")
+  resourceDownloads  ResourceDownload[] @relation("ResourceDownloadedBy")
+  createdQuestions   Question[]         @relation("QuestionCreatedBy")
+  validatedQuestions Question[]         @relation("QuestionValidatedBy")
+  createdResources   Resource[]         @relation("ResourceCreatedBy")
 
   @@map("users")
 }
@@ -131,7 +161,7 @@ model User {
 // ---------------------------------------------------------------------------
 
 model Establishment {
-  id              String              @id @default(cuid())
+  id              String               @id @default(cuid())
   name            String
   acronym         String?
   logoUrl         String?
@@ -207,6 +237,7 @@ model Series {
   subjects    SeriesSubject[]
   questions   Question[]
   simulations Simulation[]
+  statistics  BacStatistic[]
 
   @@unique([country, code])
   @@map("bac_series")
@@ -230,11 +261,12 @@ model Subject {
 }
 
 model SeriesSubject {
-  seriesId  String
-  series    Series  @relation(fields: [seriesId], references: [id], onDelete: Cascade)
-  subjectId String
-  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-  order     Int     @default(0)
+  seriesId    String
+  series      Series  @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  subjectId   String
+  subject     Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  order       Int     @default(0)
+  coefficient Float?
 
   @@id([seriesId, subjectId])
   @@map("bac_series_subjects")
@@ -257,31 +289,47 @@ model Chapter {
 }
 
 model Question {
-  id                String             @id @default(cuid())
-  seriesId          String
-  series            Series             @relation(fields: [seriesId], references: [id])
-  subjectId         String
-  subject           Subject            @relation(fields: [subjectId], references: [id])
-  chapterId         String
-  chapter           Chapter            @relation(fields: [chapterId], references: [id])
-  type              QuestionType       @default(QCM)
-  difficulty        QuestionDifficulty @default(MOYEN)
-  prompt            String
-  explanation       String?
-  source            String?
-  examYear          Int?
-  correctAnswerText String?
-  published         Boolean            @default(false)
-  createdById       String?
-  createdBy         User?              @relation("QuestionCreatedBy", fields: [createdById], references: [id])
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
+  id                   String                 @id @default(cuid())
+  seriesId             String
+  series               Series                 @relation(fields: [seriesId], references: [id])
+  subjectId            String
+  subject              Subject                @relation(fields: [subjectId], references: [id])
+  chapterId            String
+  chapter              Chapter                @relation(fields: [chapterId], references: [id])
+  subChapter           String?
+  notion               String?
+  competency           String?
+  type                 QuestionType           @default(QCM)
+  difficulty           QuestionDifficulty     @default(NIVEAU_2_APPLICATION)
+  frequencyTier        QuestionFrequencyTier?
+  prompt               String
+  explanation          String?
+  method               String?
+  commonMistake        String?
+  estimatedTimeSeconds Int?
+  source               String?
+  sourceStatus         QuestionSourceStatus   @default(SECONDAIRE)
+  examYear             Int?
+  correctAnswerText    String?
+  published            Boolean                @default(false)
+
+  validationStatus QuestionValidationStatus @default(BROUILLON)
+  validatedById    String?
+  validatedBy      User?                    @relation("QuestionValidatedBy", fields: [validatedById], references: [id])
+  validatedAt      DateTime?
+  rejectionNote    String?
+
+  createdById String?
+  createdBy   User?    @relation("QuestionCreatedBy", fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   choices           QuestionChoice[]
   simulationAnswers SimulationAnswer[]
 
   @@index([seriesId, subjectId, chapterId])
   @@index([published])
+  @@index([validationStatus])
   @@map("bac_questions")
 }
 
@@ -366,6 +414,50 @@ model UserBadge {
   @@map("bac_user_badges")
 }
 
+model BacStatistic {
+  id       String  @id @default(cuid())
+  year     Int
+  seriesId String?
+  series   Series? @relation(fields: [seriesId], references: [id])
+  province String?
+
+  candidatesCount  Int?
+  maleCandidates   Int?
+  femaleCandidates Int?
+  admissibleCount  Int?
+  admittedCount    Int?
+  postponedCount   Int?
+  passRate         Float?
+
+  status BacStatisticStatus @default(NON_DISPONIBLE)
+  source String?
+  notes  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("bac_statistics")
+}
+
+model QuestionBankSettings {
+  id String @id @default("singleton")
+
+  weightTresFrequente Float @default(40)
+  weightFrequente     Float @default(30)
+  weightOccasionnelle Float @default(20)
+  weightRare          Float @default(10)
+
+  masteryThreshold1 Int @default(40)
+  masteryThreshold2 Int @default(60)
+  masteryThreshold3 Int @default(70)
+  masteryThreshold4 Int @default(80)
+  masteryThreshold5 Int @default(90)
+
+  updatedAt DateTime @updatedAt
+
+  @@map("question_bank_settings")
+}
+
 // ---------------------------------------------------------------------------
 // CAMPUS RESSOURCES
 // ---------------------------------------------------------------------------
@@ -406,9 +498,9 @@ model ResourceSubject {
 }
 
 model Resource {
-  id            String   @id @default(cuid())
+  id            String         @id @default(cuid())
   title         String
-  slug          String   @unique
+  slug          String         @unique
   description   String?
   author        String?
   type          ResourceType

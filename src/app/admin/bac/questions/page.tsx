@@ -1,20 +1,33 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Send, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { deleteQuestion, togglePublished } from "@/lib/actions/admin-bac-questions";
-import { QUESTION_DIFFICULTY_LABELS, QUESTION_TYPE_LABELS } from "@/lib/bac";
+import { submitForValidation } from "@/lib/actions/admin-bac-validation";
+import {
+  QUESTION_DIFFICULTY_LABELS,
+  QUESTION_TYPE_LABELS,
+  QUESTION_VALIDATION_STATUS_LABELS,
+} from "@/lib/bac";
 import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = { title: "Questions BAC" };
 
+const VALIDATION_BADGE_CLASS: Record<string, string> = {
+  VALIDEE: "bg-brand-green-light text-brand-green-dark",
+  EN_ATTENTE_VALIDATION: "bg-amber-100 text-amber-700",
+  A_CORRIGER: "bg-amber-100 text-amber-700",
+  REJETEE: "bg-red-100 text-red-700",
+  BROUILLON: "bg-neutral-100 text-neutral-500",
+};
+
 export default async function AdminQuestionsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ subjectId?: string; chapterId?: string }>;
+  searchParams: Promise<{ subjectId?: string; chapterId?: string; error?: string }>;
 }) {
-  const { subjectId, chapterId } = await searchParams;
+  const { subjectId, chapterId, error } = await searchParams;
 
   const [questions, subjects] = await Promise.all([
     prisma.question.findMany({
@@ -59,6 +72,10 @@ export default async function AdminQuestionsPage({
         </div>
       </div>
 
+      {error && (
+        <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
+      )}
+
       <p className="mt-3 text-sm text-neutral-500">
         {questions.length} question{questions.length > 1 ? "s" : ""} (100 max affichées)
       </p>
@@ -72,7 +89,8 @@ export default async function AdminQuestionsPage({
               <th className="px-4 py-3">Matière / Chapitre</th>
               <th className="px-4 py-3">Type</th>
               <th className="px-4 py-3">Difficulté</th>
-              <th className="px-4 py-3">Statut</th>
+              <th className="px-4 py-3">Validation</th>
+              <th className="px-4 py-3">Publiée</th>
               <th className="px-4 py-3 text-right">Actions</th>
             </tr>
           </thead>
@@ -93,6 +111,25 @@ export default async function AdminQuestionsPage({
                   {QUESTION_DIFFICULTY_LABELS[question.difficulty]}
                 </td>
                 <td className="px-4 py-3">
+                  <span
+                    className={`rounded-full px-2.5 py-1 text-xs font-medium ${VALIDATION_BADGE_CLASS[question.validationStatus]}`}
+                  >
+                    {QUESTION_VALIDATION_STATUS_LABELS[question.validationStatus]}
+                  </span>
+                  {(question.validationStatus === "BROUILLON" ||
+                    question.validationStatus === "A_CORRIGER") && (
+                    <form action={submitForValidation.bind(null, question.id)} className="mt-1">
+                      <button
+                        type="submit"
+                        className="flex items-center gap-1 text-xs font-medium text-brand-blue hover:underline"
+                      >
+                        <Send className="size-3" />
+                        Soumettre
+                      </button>
+                    </form>
+                  )}
+                </td>
+                <td className="px-4 py-3">
                   <form action={togglePublished.bind(null, question.id, question.published)}>
                     <button
                       type="submit"
@@ -102,7 +139,7 @@ export default async function AdminQuestionsPage({
                           : "rounded-full bg-neutral-100 px-2.5 py-1 text-xs font-medium text-neutral-500"
                       }
                     >
-                      {question.published ? "Publiée" : "Brouillon"}
+                      {question.published ? "Publiée" : "Non publiée"}
                     </button>
                   </form>
                 </td>

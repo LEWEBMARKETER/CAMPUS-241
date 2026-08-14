@@ -74,8 +74,71 @@ export function computeChapterBreakdown(
     .sort((a, b) => b.percentage - a.percentage);
 }
 
+export type NotionBreakdownEntry = {
+  notion: string;
+  correct: number;
+  total: number;
+  percentage: number;
+};
+
+export function computeNotionBreakdown(
+  answers: { notion: string | null; isCorrect: boolean }[],
+): NotionBreakdownEntry[] {
+  const byNotion = new Map<string, { correct: number; total: number }>();
+
+  for (const answer of answers) {
+    if (!answer.notion) continue;
+    const entry = byNotion.get(answer.notion) ?? { correct: 0, total: 0 };
+    entry.total += 1;
+    if (answer.isCorrect) entry.correct += 1;
+    byNotion.set(answer.notion, entry);
+  }
+
+  return Array.from(byNotion.entries())
+    .map(([notion, entry]) => ({
+      notion,
+      correct: entry.correct,
+      total: entry.total,
+      percentage: entry.total > 0 ? Math.round((entry.correct / entry.total) * 100) : 0,
+    }))
+    .sort((a, b) => a.percentage - b.percentage);
+}
+
 export function computeProgression(currentScore: number, previousScores: number[]) {
   if (previousScores.length === 0) return null;
   const average = previousScores.reduce((sum, s) => sum + s, 0) / previousScores.length;
   return Math.round(currentScore - average);
+}
+
+export type MasteryThresholds = {
+  masteryThreshold1: number;
+  masteryThreshold2: number;
+  masteryThreshold3: number;
+  masteryThreshold4: number;
+  masteryThreshold5: number;
+};
+
+export const MASTERY_LEVEL_LABELS = [
+  "À renforcer",
+  "Fragile",
+  "En progression",
+  "Bon niveau",
+  "Très bon niveau",
+  "Maîtrise",
+] as const;
+
+export function computeMasteryLevel(score: number, thresholds: MasteryThresholds) {
+  const bounds = [
+    thresholds.masteryThreshold1,
+    thresholds.masteryThreshold2,
+    thresholds.masteryThreshold3,
+    thresholds.masteryThreshold4,
+    thresholds.masteryThreshold5,
+  ];
+  let index = 0;
+  for (const bound of bounds) {
+    if (score >= bound) index += 1;
+    else break;
+  }
+  return MASTERY_LEVEL_LABELS[index];
 }

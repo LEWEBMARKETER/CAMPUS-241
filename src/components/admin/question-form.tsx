@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import {
   CHOICE_BASED_TYPES,
   QUESTION_DIFFICULTY_LABELS,
+  QUESTION_FREQUENCY_LABELS,
+  QUESTION_SOURCE_STATUS_LABELS,
   QUESTION_TYPE_LABELS,
 } from "@/lib/bac";
 
@@ -143,6 +145,37 @@ export function QuestionForm({
 
       <div className="grid gap-4 sm:grid-cols-3">
         <div>
+          <label className={labelClass}>Sous-chapitre</label>
+          <input
+            type="text"
+            name="subChapter"
+            defaultValue={question?.subChapter ?? ""}
+            className={inputClass}
+          />
+        </div>
+        <div>
+          <label className={labelClass}>Notion</label>
+          <input
+            type="text"
+            name="notion"
+            placeholder="Ex : Probabilités conditionnelles"
+            defaultValue={question?.notion ?? ""}
+            className={inputClass}
+          />
+        </div>
+        <div>
+          <label className={labelClass}>Compétence évaluée</label>
+          <input
+            type="text"
+            name="competency"
+            defaultValue={question?.competency ?? ""}
+            className={inputClass}
+          />
+        </div>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        <div>
           <label className={labelClass}>Type</label>
           <select
             name="type"
@@ -159,7 +192,11 @@ export function QuestionForm({
         </div>
         <div>
           <label className={labelClass}>Difficulté</label>
-          <select name="difficulty" defaultValue={question?.difficulty ?? "MOYEN"} className={inputClass}>
+          <select
+            name="difficulty"
+            defaultValue={question?.difficulty ?? "NIVEAU_2_APPLICATION"}
+            className={inputClass}
+          >
             {Object.entries(QUESTION_DIFFICULTY_LABELS).map(([value, label]) => (
               <option key={value} value={value}>
                 {label}
@@ -168,13 +205,19 @@ export function QuestionForm({
           </select>
         </div>
         <div>
-          <label className={labelClass}>Année (annale)</label>
-          <input
-            type="number"
-            name="examYear"
-            defaultValue={question?.examYear ?? ""}
+          <label className={labelClass}>Fréquence (récurrence dans les annales)</label>
+          <select
+            name="frequencyTier"
+            defaultValue={question?.frequencyTier ?? ""}
             className={inputClass}
-          />
+          >
+            <option value="">Non évaluée</option>
+            {Object.entries(QUESTION_FREQUENCY_LABELS).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
@@ -248,7 +291,7 @@ export function QuestionForm({
       )}
 
       <div>
-        <label className={labelClass}>Explication</label>
+        <label className={labelClass}>Explication (pourquoi cette réponse est correcte)</label>
         <textarea
           name="explanation"
           rows={2}
@@ -257,20 +300,78 @@ export function QuestionForm({
         />
       </div>
 
-      <div>
-        <label className={labelClass}>Source</label>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label className={labelClass}>Méthode</label>
+          <textarea
+            name="method"
+            rows={2}
+            placeholder="La méthode à appliquer pour résoudre"
+            defaultValue={question?.method ?? ""}
+            className={inputClass}
+          />
+        </div>
+        <div>
+          <label className={labelClass}>Piège / erreur fréquente</label>
+          <textarea
+            name="commonMistake"
+            rows={2}
+            defaultValue={question?.commonMistake ?? ""}
+            className={inputClass}
+          />
+        </div>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        <div>
+          <label className={labelClass}>Année (annale)</label>
+          <input
+            type="number"
+            name="examYear"
+            defaultValue={question?.examYear ?? ""}
+            className={inputClass}
+          />
+        </div>
+        <div>
+          <label className={labelClass}>Source</label>
+          <input
+            type="text"
+            name="source"
+            placeholder="Ex : Sujet Bac D 2019"
+            defaultValue={question?.source ?? ""}
+            className={inputClass}
+          />
+        </div>
+        <div>
+          <label className={labelClass}>Statut de la source</label>
+          <select
+            name="sourceStatus"
+            defaultValue={question?.sourceStatus ?? "SECONDAIRE"}
+            className={inputClass}
+          >
+            {Object.entries(QUESTION_SOURCE_STATUS_LABELS).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div className="sm:w-1/3">
+        <label className={labelClass}>Temps estimé (secondes)</label>
         <input
-          type="text"
-          name="source"
-          defaultValue={question?.source ?? ""}
+          type="number"
+          name="estimatedTimeSeconds"
+          defaultValue={question?.estimatedTimeSeconds ?? ""}
           className={inputClass}
         />
       </div>
 
-      <label className="flex items-center gap-2 text-sm text-neutral-700">
-        <input type="checkbox" name="published" defaultChecked={question?.published ?? false} />
-        Publiée
-      </label>
+      <p className="text-xs text-neutral-500">
+        Une question créée ou modifiée ici repart en brouillon et doit être soumise à la
+        validation pédagogique avant de pouvoir être publiée.
+      </p>
 
       <Button type="submit" className="w-full sm:w-auto">
         {question ? "Enregistrer les modifications" : "Créer la question"}

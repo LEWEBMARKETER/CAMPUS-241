@@ -9,11 +9,15 @@ const adminOnlyNav = [
 ];
 
 const bacNav = [
+  { label: "Tableau de bord", href: "/admin/bac/tableau-de-bord" },
   { label: "Séries", href: "/admin/bac/series" },
   { label: "Matières", href: "/admin/bac/matieres" },
   { label: "Chapitres", href: "/admin/bac/chapitres" },
   { label: "Questions", href: "/admin/bac/questions" },
   { label: "Import CSV", href: "/admin/bac/questions/importer" },
+  { label: "Validation pédagogique", href: "/admin/bac/validation" },
+  { label: "Statistiques officielles", href: "/admin/bac/statistiques" },
+  { label: "Réglages", href: "/admin/bac/reglages" },
 ];
 
 const ressourcesNav = [
