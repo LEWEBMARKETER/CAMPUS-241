@@ -1,0 +1,6 @@
+@import "tailwindcss";
+@import "@campus241/shared/theme.css";
+
+/* Étend la détection de classes Tailwind aux composants du package partagé
+   (Button, Card, Logo, ...), en dehors de l'arbre de cette app. */
+@source "../../../../packages/shared/src/components/**/*.{ts,tsx}";

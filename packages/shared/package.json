@@ -1,0 +1,53 @@
+{
+  "name": "@campus241/shared",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "postinstall": "prisma generate",
+    "db:migrate:deploy": "PRISMA_SCHEMA_DISABLE_ADVISORY_LOCK=true prisma migrate deploy",
+    "db:seed": "tsx prisma/seed.ts"
+  },
+  "exports": {
+    "./auth": "./src/lib/auth.ts",
+    "./session": "./src/lib/session.ts",
+    "./prisma": "./src/lib/prisma.ts",
+    "./resources": "./src/lib/resources.ts",
+    "./bac": "./src/lib/bac.ts",
+    "./bac-badges": "./src/lib/bac-badges.ts",
+    "./establishment": "./src/lib/establishment.ts",
+    "./whatsapp": "./src/lib/whatsapp.ts",
+    "./scoring": "./src/lib/scoring.ts",
+    "./simulation-weighting": "./src/lib/simulation-weighting.ts",
+    "./utils": "./src/lib/utils.ts",
+    "./nav": "./src/lib/nav.ts",
+    "./question-bank-settings": "./src/lib/question-bank-settings.ts",
+    "./ui/button": "./src/components/ui/button.tsx",
+    "./ui/card": "./src/components/ui/card.tsx",
+    "./layout/logo": "./src/components/layout/logo.tsx",
+    "./theme.css": "./src/theme.css"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.9.1",
+    "@prisma/client": "^7.9.1",
+    "@radix-ui/react-slot": "^1.3.3",
+    "bcryptjs": "^3.0.3",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "next": "16.2.12",
+    "next-auth": "^5.0.0-beta.32",
+    "pg": "^8.22.0",
+    "react": "19.2.4",
+    "tailwind-merge": "^3.6.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^20",
+    "@types/pg": "^8.20.3",
+    "@types/react": "^19",
+    "dotenv": "^17.4.2",
+    "prisma": "^7.9.1",
+    "tsx": "^4.23.1",
+    "typescript": "^5"
+  }
+}
