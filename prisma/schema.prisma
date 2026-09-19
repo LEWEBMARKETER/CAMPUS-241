@@ -152,6 +152,7 @@ model User {
   createdQuestions   Question[]         @relation("QuestionCreatedBy")
   validatedQuestions Question[]         @relation("QuestionValidatedBy")
   createdResources   Resource[]         @relation("ResourceCreatedBy")
+  validatedResources Resource[]         @relation("ResourceValidatedBy")
 
   @@map("users")
 }
@@ -525,6 +526,11 @@ model Resource {
 
   status      ResourceStatus @default(BROUILLON)
   publishedAt DateTime?
+
+  validatedById String?
+  validatedBy   User?     @relation("ResourceValidatedBy", fields: [validatedById], references: [id])
+  validatedAt   DateTime?
+  rejectionNote String?
 
   viewCount     Int @default(0)
   downloadCount Int @default(0)

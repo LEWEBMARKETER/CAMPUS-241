@@ -1,9 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Pencil, Trash2 } from "lucide-react";
+import { Archive, ArchiveRestore, Pencil, Send, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { deleteResource, togglePremium } from "@/lib/actions/admin-resources";
+import {
+  archiveResource,
+  deleteResource,
+  togglePremium,
+  unarchiveResource,
+} from "@/lib/actions/admin-resources";
+import { publishResource, submitResourceForValidation, unpublishResource } from "@/lib/actions/admin-resources-validation";
 import { RESOURCE_STATUS_LABELS, RESOURCE_TYPE_LABELS } from "@/lib/resources";
 import { prisma } from "@/lib/prisma";
 
@@ -20,9 +26,9 @@ const STATUS_BADGE_CLASS: Record<string, string> = {
 export default async function AdminResourcesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{ status?: string; error?: string }>;
 }) {
-  const { status } = await searchParams;
+  const { status, error } = await searchParams;
 
   const resources = await prisma.resource.findMany({
     where: { status: (status as never) || undefined },
@@ -50,10 +56,19 @@ export default async function AdminResourcesPage({
             Filtrer
           </Button>
         </form>
-        <Button asChild size="sm">
-          <Link href="/admin/ressources/nouveau">Nouvelle ressource</Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button asChild variant="outline" size="sm">
+            <Link href="/admin/ressources/importer">Import CSV</Link>
+          </Button>
+          <Button asChild size="sm">
+            <Link href="/admin/ressources/nouveau">Nouvelle ressource</Link>
+          </Button>
+        </div>
       </div>
+
+      {error && (
+        <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
+      )}
 
       <p className="mt-3 text-sm text-neutral-500">
         {resources.length} ressource{resources.length > 1 ? "s" : ""} (100 max affichées)
@@ -86,6 +101,36 @@ export default async function AdminResourcesPage({
                   >
                     {RESOURCE_STATUS_LABELS[resource.status]}
                   </span>
+                  <div className="mt-1 flex flex-col gap-0.5">
+                    {resource.status === "BROUILLON" && (
+                      <form action={submitResourceForValidation.bind(null, resource.id)}>
+                        <button
+                          type="submit"
+                          className="flex items-center gap-1 text-xs font-medium text-brand-blue hover:underline"
+                        >
+                          <Send className="size-3" />
+                          Soumettre
+                        </button>
+                      </form>
+                    )}
+                    {resource.status === "VALIDE" && (
+                      <form action={publishResource.bind(null, resource.id)}>
+                        <button
+                          type="submit"
+                          className="text-xs font-medium text-brand-green-dark hover:underline"
+                        >
+                          Publier
+                        </button>
+                      </form>
+                    )}
+                    {resource.status === "PUBLIE" && (
+                      <form action={unpublishResource.bind(null, resource.id)}>
+                        <button type="submit" className="text-xs font-medium text-neutral-500 hover:underline">
+                          Dépublier
+                        </button>
+                      </form>
+                    )}
+                  </div>
                 </td>
                 <td className="px-4 py-3">
                   <form action={togglePremium.bind(null, resource.id, resource.isPremium)}>
@@ -111,6 +156,20 @@ export default async function AdminResourcesPage({
                         <Pencil className="size-4" />
                       </Link>
                     </Button>
+                    <form
+                      action={(resource.status === "ARCHIVE" ? unarchiveResource : archiveResource).bind(
+                        null,
+                        resource.id,
+                      )}
+                    >
+                      <Button type="submit" variant="outline" size="sm">
+                        {resource.status === "ARCHIVE" ? (
+                          <ArchiveRestore className="size-4" />
+                        ) : (
+                          <Archive className="size-4" />
+                        )}
+                      </Button>
+                    </form>
                     <form action={deleteResource.bind(null, resource.id)}>
                       <Button type="submit" variant="outline" size="sm">
                         <Trash2 className="size-4" />

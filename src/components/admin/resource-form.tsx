@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import {
   AVAILABLE_RESOURCE_FORMATS,
   RESOURCE_FORMAT_LABELS,
-  RESOURCE_STATUS_LABELS,
   RESOURCE_TYPE_LABELS,
 } from "@/lib/resources";
 
@@ -192,16 +191,6 @@ export function ResourceForm({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label className={labelClass}>Statut</label>
-          <select name="status" defaultValue={resource?.status ?? "BROUILLON"} className={inputClass}>
-            {Object.entries(RESOURCE_STATUS_LABELS).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
           <label className={labelClass}>Libellé de prix (si premium)</label>
           <input
             type="text"
@@ -211,12 +200,18 @@ export function ResourceForm({
             className={inputClass}
           />
         </div>
+        <div className="flex items-end pb-2">
+          <label className="flex items-center gap-2 text-sm text-neutral-700">
+            <input type="checkbox" name="isPremium" defaultChecked={resource?.isPremium ?? false} />
+            Ressource premium
+          </label>
+        </div>
       </div>
 
-      <label className="flex items-center gap-2 text-sm text-neutral-700">
-        <input type="checkbox" name="isPremium" defaultChecked={resource?.isPremium ?? false} />
-        Ressource premium
-      </label>
+      <p className="text-xs text-neutral-500">
+        Une ressource créée ou modifiée ici repart en brouillon et doit être soumise à la
+        validation pédagogique avant de pouvoir être publiée.
+      </p>
 
       <Button type="submit" className="w-full sm:w-auto">
         {resource ? "Enregistrer les modifications" : "Créer la ressource"}

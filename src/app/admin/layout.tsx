@@ -21,9 +21,12 @@ const bacNav = [
 ];
 
 const ressourcesNav = [
+  { label: "Tableau de bord", href: "/admin/ressources/tableau-de-bord" },
   { label: "Catégories", href: "/admin/ressources/categories" },
   { label: "Matières", href: "/admin/ressources/matieres" },
   { label: "Ressources", href: "/admin/ressources" },
+  { label: "Import CSV", href: "/admin/ressources/importer" },
+  { label: "Validation pédagogique", href: "/admin/ressources/validation" },
 ];
 
 export default async function AdminLayout({

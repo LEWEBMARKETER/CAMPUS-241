@@ -31,7 +31,6 @@ type ResourceInput = {
   subjectId: string | null;
   isPremium: boolean;
   priceLabel: string | null;
-  status: "BROUILLON" | "EN_ATTENTE" | "VALIDE" | "PUBLIE" | "ARCHIVE";
 };
 
 const resourceSchema = z.object({
@@ -63,7 +62,6 @@ const resourceSchema = z.object({
   subjectId: z.string().optional(),
   isPremium: z.string().optional(),
   priceLabel: z.string().trim().optional(),
-  status: z.enum(["BROUILLON", "EN_ATTENTE", "VALIDE", "PUBLIE", "ARCHIVE"]),
 });
 
 function parseResourceForm(formData: FormData): { error: string } | { data: ResourceInput } {
@@ -90,7 +88,6 @@ function parseResourceForm(formData: FormData): { error: string } | { data: Reso
       subjectId: data.subjectId || null,
       isPremium: data.isPremium === "on",
       priceLabel: data.priceLabel || null,
-      status: data.status,
     },
   };
 }
@@ -105,7 +102,7 @@ export async function createResource(formData: FormData) {
   await prisma.resource.create({
     data: {
       ...result.data,
-      publishedAt: result.data.status === "PUBLIE" ? new Date() : null,
+      status: "BROUILLON",
       createdById: user.id,
     },
   });
@@ -120,14 +117,16 @@ export async function updateResource(id: string, formData: FormData) {
     redirect(`/admin/ressources/${id}?error=${encodeURIComponent(result.error)}`);
   }
 
-  const existing = await prisma.resource.findUnique({ where: { id } });
-  const becomesPublished = result.data.status === "PUBLIE" && existing?.status !== "PUBLIE";
+  const existing = await prisma.resource.findUnique({ where: { id }, select: { status: true } });
 
   await prisma.resource.update({
     where: { id },
     data: {
       ...result.data,
-      publishedAt: becomesPublished ? new Date() : existing?.publishedAt,
+      // Toute modification d'une ressource déjà en circuit repart en brouillon :
+      // re-validation obligatoire. Une ressource archivée le reste (édition de
+      // métadonnées uniquement, ne relance pas le circuit).
+      status: existing?.status === "ARCHIVE" ? "ARCHIVE" : "BROUILLON",
     },
   });
   revalidatePath("/admin/ressources");
@@ -143,5 +142,17 @@ export async function deleteResource(id: string) {
 export async function togglePremium(id: string, current: boolean) {
   await requireEditor();
   await prisma.resource.update({ where: { id }, data: { isPremium: !current } });
+  revalidatePath("/admin/ressources");
+}
+
+export async function archiveResource(id: string) {
+  await requireEditor();
+  await prisma.resource.update({ where: { id }, data: { status: "ARCHIVE" } });
+  revalidatePath("/admin/ressources");
+}
+
+export async function unarchiveResource(id: string) {
+  await requireEditor();
+  await prisma.resource.update({ where: { id }, data: { status: "BROUILLON" } });
   revalidatePath("/admin/ressources");
 }
